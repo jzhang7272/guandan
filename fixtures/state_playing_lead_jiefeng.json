@@ -1,0 +1,202 @@
+{
+  "type": "State",
+  "your_seat": 3,
+  "seats": [
+    {
+      "display_name": "Josey",
+      "connected": true
+    },
+    {
+      "display_name": "Alex",
+      "connected": true
+    },
+    {
+      "display_name": "Sam",
+      "connected": true
+    },
+    {
+      "display_name": "Robin",
+      "connected": true
+    }
+  ],
+  "room": {
+    "InGame": {
+      "team_levels": [
+        "Two",
+        "Five"
+      ],
+      "a_attempts": [
+        0,
+        0
+      ],
+      "declaring": "B",
+      "card_counts": [
+        {
+          "Exact": 8
+        },
+        {
+          "Exact": 0
+        },
+        "MoreThanTen",
+        {
+          "Exact": 6
+        }
+      ],
+      "phase": {
+        "Playing": {
+          "your_hand": [
+            {
+              "Standard": {
+                "rank": "Five",
+                "suit": "Heart"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Five",
+                "suit": "Heart"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Nine",
+                "suit": "Spade"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Nine",
+                "suit": "Diamond"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Nine",
+                "suit": "Diamond"
+              }
+            },
+            {
+              "Joker": "Big"
+            }
+          ],
+          "level": "Five",
+          "turn": 3,
+          "trick": [],
+          "last_trick": {
+            "entries": [
+              {
+                "Played": {
+                  "seat": 1,
+                  "play": {
+                    "cards": [
+                      {
+                        "Standard": {
+                          "rank": "Six",
+                          "suit": "Heart"
+                        }
+                      },
+                      {
+                        "Standard": {
+                          "rank": "Six",
+                          "suit": "Diamond"
+                        }
+                      },
+                      {
+                        "Standard": {
+                          "rank": "Seven",
+                          "suit": "Heart"
+                        }
+                      },
+                      {
+                        "Standard": {
+                          "rank": "Seven",
+                          "suit": "Heart"
+                        }
+                      },
+                      {
+                        "Standard": {
+                          "rank": "Eight",
+                          "suit": "Diamond"
+                        }
+                      },
+                      {
+                        "Standard": {
+                          "rank": "Eight",
+                          "suit": "Diamond"
+                        }
+                      }
+                    ],
+                    "combo": {
+                      "Tube": {
+                        "top": "Eight"
+                      }
+                    },
+                    "wildcard_as": []
+                  }
+                }
+              },
+              {
+                "Passed": {
+                  "seat": 2
+                }
+              },
+              {
+                "Passed": {
+                  "seat": 3
+                }
+              },
+              {
+                "Passed": {
+                  "seat": 0
+                }
+              }
+            ],
+            "winner": 1,
+            "next_leader": 3
+          },
+          "finish_order": [
+            1
+          ],
+          "deal_start": {
+            "Tribute": {
+              "exchanges": [
+                {
+                  "payer": 0,
+                  "receiver": 1,
+                  "tribute": {
+                    "Joker": "Small"
+                  },
+                  "returned": {
+                    "Standard": {
+                      "rank": "Three",
+                      "suit": "Club"
+                    }
+                  }
+                },
+                {
+                  "payer": 2,
+                  "receiver": 3,
+                  "tribute": {
+                    "Standard": {
+                      "rank": "Five",
+                      "suit": "Club"
+                    }
+                  },
+                  "returned": {
+                    "Standard": {
+                      "rank": "Four",
+                      "suit": "Diamond"
+                    }
+                  }
+                }
+              ],
+              "leader": 0
+            }
+          },
+          "can_take_back": false,
+          "took_back": null
+        }
+      }
+    }
+  }
+}

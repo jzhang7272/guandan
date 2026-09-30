@@ -1,0 +1,119 @@
+{
+  "type": "State",
+  "your_seat": 3,
+  "seats": [
+    {
+      "display_name": "Josey",
+      "connected": true
+    },
+    {
+      "display_name": "Alex",
+      "connected": true
+    },
+    {
+      "display_name": "Sam",
+      "connected": true
+    },
+    {
+      "display_name": "Robin",
+      "connected": true
+    }
+  ],
+  "room": {
+    "Lobby": {
+      "ready": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "progress": {
+        "team_levels": [
+          "Two",
+          "Two"
+        ],
+        "declaring": null,
+        "a_attempts": [
+          0,
+          0
+        ]
+      },
+      "seats_locked": false,
+      "last_deal": {
+        "summary": {
+          "result": {
+            "order": [
+              0,
+              1,
+              2,
+              3
+            ]
+          },
+          "before": {
+            "team_levels": [
+              "Ace",
+              "Jack"
+            ],
+            "declaring": "A",
+            "a_attempts": [
+              1,
+              0
+            ]
+          },
+          "after": {
+            "team_levels": [
+              "Ace",
+              "Jack"
+            ],
+            "declaring": "A",
+            "a_attempts": [
+              1,
+              0
+            ]
+          },
+          "dropped_to_two": null,
+          "match_winner": "A"
+        },
+        "final_trick": [
+          {
+            "Played": {
+              "seat": 3,
+              "play": {
+                "cards": [
+                  {
+                    "Standard": {
+                      "rank": "Nine",
+                      "suit": "Spade"
+                    }
+                  }
+                ],
+                "combo": {
+                  "Single": {
+                    "Rank": "Nine"
+                  }
+                },
+                "wildcard_as": []
+              }
+            }
+          },
+          {
+            "Played": {
+              "seat": 2,
+              "play": {
+                "cards": [
+                  {
+                    "Joker": "Big"
+                  }
+                ],
+                "combo": {
+                  "Single": "BigJoker"
+                },
+                "wildcard_as": []
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

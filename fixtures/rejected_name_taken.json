@@ -1,0 +1,5 @@
+{
+  "type": "Rejected",
+  "code": "NameTaken",
+  "message": "that name is already taken by a connected player"
+}

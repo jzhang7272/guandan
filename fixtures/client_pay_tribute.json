@@ -1,0 +1,9 @@
+{
+  "type": "PayTribute",
+  "card": {
+    "Standard": {
+      "rank": "Five",
+      "suit": "Club"
+    }
+  }
+}

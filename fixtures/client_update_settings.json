@@ -1,0 +1,8 @@
+{
+  "type": "UpdateSettings",
+  "team_levels": [
+    "Ace",
+    "Eight"
+  ],
+  "declaring": "B"
+}

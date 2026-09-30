@@ -1,0 +1,9 @@
+{
+  "type": "ReturnTribute",
+  "card": {
+    "Standard": {
+      "rank": "Three",
+      "suit": "Club"
+    }
+  }
+}

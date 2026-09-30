@@ -1,0 +1,5 @@
+{
+  "type": "Rejected",
+  "code": "NotYourTurn",
+  "message": "it is not your turn"
+}

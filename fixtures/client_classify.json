@@ -1,0 +1,36 @@
+{
+  "type": "Classify",
+  "request_id": 7,
+  "cards": [
+    {
+      "Standard": {
+        "rank": "Five",
+        "suit": "Heart"
+      }
+    },
+    {
+      "Standard": {
+        "rank": "Five",
+        "suit": "Heart"
+      }
+    },
+    {
+      "Standard": {
+        "rank": "Nine",
+        "suit": "Spade"
+      }
+    },
+    {
+      "Standard": {
+        "rank": "Nine",
+        "suit": "Diamond"
+      }
+    },
+    {
+      "Standard": {
+        "rank": "Nine",
+        "suit": "Diamond"
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "type": "Play",
+  "cards": [
+    {
+      "Standard": {
+        "rank": "Nine",
+        "suit": "Spade"
+      }
+    },
+    {
+      "Standard": {
+        "rank": "Nine",
+        "suit": "Club"
+      }
+    }
+  ],
+  "declared": null
+}

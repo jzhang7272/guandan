@@ -1,0 +1,45 @@
+{
+  "type": "State",
+  "your_seat": 0,
+  "seats": [
+    {
+      "display_name": "Josey",
+      "connected": true
+    },
+    {
+      "display_name": "Alex",
+      "connected": true
+    },
+    {
+      "display_name": "Sam",
+      "connected": true
+    },
+    {
+      "display_name": null,
+      "connected": false
+    }
+  ],
+  "room": {
+    "Lobby": {
+      "ready": [
+        true,
+        false,
+        true,
+        false
+      ],
+      "progress": {
+        "team_levels": [
+          "Two",
+          "Two"
+        ],
+        "declaring": null,
+        "a_attempts": [
+          0,
+          0
+        ]
+      },
+      "seats_locked": false,
+      "last_deal": null
+    }
+  }
+}

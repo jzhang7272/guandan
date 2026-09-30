@@ -1,0 +1,123 @@
+{
+  "type": "ChooseReading",
+  "cards": [
+    {
+      "Standard": {
+        "rank": "Five",
+        "suit": "Heart"
+      }
+    },
+    {
+      "Standard": {
+        "rank": "Five",
+        "suit": "Heart"
+      }
+    },
+    {
+      "Standard": {
+        "rank": "Nine",
+        "suit": "Spade"
+      }
+    },
+    {
+      "Standard": {
+        "rank": "Nine",
+        "suit": "Diamond"
+      }
+    },
+    {
+      "Standard": {
+        "rank": "Nine",
+        "suit": "Diamond"
+      }
+    }
+  ],
+  "options": [
+    {
+      "cards": [
+        {
+          "Standard": {
+            "rank": "Five",
+            "suit": "Heart"
+          }
+        },
+        {
+          "Standard": {
+            "rank": "Five",
+            "suit": "Heart"
+          }
+        },
+        {
+          "Standard": {
+            "rank": "Nine",
+            "suit": "Spade"
+          }
+        },
+        {
+          "Standard": {
+            "rank": "Nine",
+            "suit": "Diamond"
+          }
+        },
+        {
+          "Standard": {
+            "rank": "Nine",
+            "suit": "Diamond"
+          }
+        }
+      ],
+      "combo": {
+        "FullHouse": {
+          "triple": "Nine"
+        }
+      },
+      "wildcard_as": []
+    },
+    {
+      "cards": [
+        {
+          "Standard": {
+            "rank": "Five",
+            "suit": "Heart"
+          }
+        },
+        {
+          "Standard": {
+            "rank": "Five",
+            "suit": "Heart"
+          }
+        },
+        {
+          "Standard": {
+            "rank": "Nine",
+            "suit": "Spade"
+          }
+        },
+        {
+          "Standard": {
+            "rank": "Nine",
+            "suit": "Diamond"
+          }
+        },
+        {
+          "Standard": {
+            "rank": "Nine",
+            "suit": "Diamond"
+          }
+        }
+      ],
+      "combo": {
+        "Bomb": {
+          "OfAKind": {
+            "size": 5,
+            "rank": "Nine"
+          }
+        }
+      },
+      "wildcard_as": [
+        "Nine",
+        "Nine"
+      ]
+    }
+  ]
+}

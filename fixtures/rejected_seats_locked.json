@@ -1,0 +1,5 @@
+{
+  "type": "Rejected",
+  "code": "SeatsLocked",
+  "message": "seats are locked during a match; start a new match to change seats"
+}

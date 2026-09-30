@@ -1,0 +1,43 @@
+{
+  "type": "Play",
+  "cards": [
+    {
+      "Standard": {
+        "rank": "Five",
+        "suit": "Heart"
+      }
+    },
+    {
+      "Standard": {
+        "rank": "Five",
+        "suit": "Heart"
+      }
+    },
+    {
+      "Standard": {
+        "rank": "Nine",
+        "suit": "Spade"
+      }
+    },
+    {
+      "Standard": {
+        "rank": "Nine",
+        "suit": "Diamond"
+      }
+    },
+    {
+      "Standard": {
+        "rank": "Nine",
+        "suit": "Diamond"
+      }
+    }
+  ],
+  "declared": {
+    "Bomb": {
+      "OfAKind": {
+        "size": 5,
+        "rank": "Nine"
+      }
+    }
+  }
+}

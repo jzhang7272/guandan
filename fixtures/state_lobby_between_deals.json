@@ -1,0 +1,136 @@
+{
+  "type": "State",
+  "your_seat": 0,
+  "seats": [
+    {
+      "display_name": "Josey",
+      "connected": true
+    },
+    {
+      "display_name": "Alex",
+      "connected": true
+    },
+    {
+      "display_name": "Sam",
+      "connected": true
+    },
+    {
+      "display_name": "Robin",
+      "connected": true
+    }
+  ],
+  "room": {
+    "Lobby": {
+      "ready": [
+        true,
+        false,
+        false,
+        true
+      ],
+      "progress": {
+        "team_levels": [
+          "Ace",
+          "Eight"
+        ],
+        "declaring": "B",
+        "a_attempts": [
+          1,
+          0
+        ]
+      },
+      "seats_locked": true,
+      "last_deal": {
+        "summary": {
+          "result": {
+            "order": [
+              1,
+              2,
+              3,
+              0
+            ]
+          },
+          "before": {
+            "team_levels": [
+              "Ace",
+              "Six"
+            ],
+            "declaring": "A",
+            "a_attempts": [
+              0,
+              0
+            ]
+          },
+          "after": {
+            "team_levels": [
+              "Ace",
+              "Eight"
+            ],
+            "declaring": "B",
+            "a_attempts": [
+              1,
+              0
+            ]
+          },
+          "dropped_to_two": null,
+          "match_winner": null
+        },
+        "final_trick": [
+          {
+            "Played": {
+              "seat": 0,
+              "play": {
+                "cards": [
+                  {
+                    "Standard": {
+                      "rank": "Seven",
+                      "suit": "Spade"
+                    }
+                  },
+                  {
+                    "Standard": {
+                      "rank": "Seven",
+                      "suit": "Diamond"
+                    }
+                  }
+                ],
+                "combo": {
+                  "Pair": {
+                    "Rank": "Seven"
+                  }
+                },
+                "wildcard_as": []
+              }
+            }
+          },
+          {
+            "Played": {
+              "seat": 3,
+              "play": {
+                "cards": [
+                  {
+                    "Standard": {
+                      "rank": "King",
+                      "suit": "Heart"
+                    }
+                  },
+                  {
+                    "Standard": {
+                      "rank": "King",
+                      "suit": "Club"
+                    }
+                  }
+                ],
+                "combo": {
+                  "Pair": {
+                    "Rank": "King"
+                  }
+                },
+                "wildcard_as": []
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

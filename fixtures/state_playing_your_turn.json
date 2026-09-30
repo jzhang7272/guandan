@@ -1,0 +1,339 @@
+{
+  "type": "State",
+  "your_seat": 3,
+  "seats": [
+    {
+      "display_name": "Josey",
+      "connected": true
+    },
+    {
+      "display_name": "Alex",
+      "connected": true
+    },
+    {
+      "display_name": "Sam",
+      "connected": true
+    },
+    {
+      "display_name": "Robin",
+      "connected": true
+    }
+  ],
+  "room": {
+    "InGame": {
+      "team_levels": [
+        "Two",
+        "Five"
+      ],
+      "a_attempts": [
+        0,
+        0
+      ],
+      "declaring": "B",
+      "card_counts": [
+        {
+          "Exact": 8
+        },
+        "MoreThanTen",
+        "MoreThanTen",
+        {
+          "Exact": 18
+        }
+      ],
+      "phase": {
+        "Playing": {
+          "your_hand": [
+            {
+              "Standard": {
+                "rank": "Five",
+                "suit": "Heart"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Five",
+                "suit": "Heart"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Five",
+                "suit": "Club"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Six",
+                "suit": "Spade"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Six",
+                "suit": "Heart"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Six",
+                "suit": "Diamond"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Eight",
+                "suit": "Spade"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Eight",
+                "suit": "Heart"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Eight",
+                "suit": "Club"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Nine",
+                "suit": "Spade"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Nine",
+                "suit": "Diamond"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Nine",
+                "suit": "Diamond"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Ten",
+                "suit": "Club"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Jack",
+                "suit": "Heart"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Queen",
+                "suit": "Diamond"
+              }
+            },
+            {
+              "Standard": {
+                "rank": "Ace",
+                "suit": "Diamond"
+              }
+            },
+            {
+              "Joker": "Small"
+            },
+            {
+              "Joker": "Big"
+            }
+          ],
+          "level": "Five",
+          "turn": 3,
+          "trick": [
+            {
+              "Played": {
+                "seat": 1,
+                "play": {
+                  "cards": [
+                    {
+                      "Standard": {
+                        "rank": "Nine",
+                        "suit": "Spade"
+                      }
+                    },
+                    {
+                      "Standard": {
+                        "rank": "Nine",
+                        "suit": "Club"
+                      }
+                    }
+                  ],
+                  "combo": {
+                    "Pair": {
+                      "Rank": "Nine"
+                    }
+                  },
+                  "wildcard_as": []
+                }
+              }
+            },
+            {
+              "Passed": {
+                "seat": 2
+              }
+            }
+          ],
+          "last_trick": {
+            "entries": [
+              {
+                "Played": {
+                  "seat": 0,
+                  "play": {
+                    "cards": [
+                      {
+                        "Standard": {
+                          "rank": "Four",
+                          "suit": "Spade"
+                        }
+                      },
+                      {
+                        "Standard": {
+                          "rank": "Five",
+                          "suit": "Diamond"
+                        }
+                      },
+                      {
+                        "Standard": {
+                          "rank": "Six",
+                          "suit": "Spade"
+                        }
+                      },
+                      {
+                        "Standard": {
+                          "rank": "Seven",
+                          "suit": "Club"
+                        }
+                      },
+                      {
+                        "Standard": {
+                          "rank": "Eight",
+                          "suit": "Heart"
+                        }
+                      }
+                    ],
+                    "combo": {
+                      "Straight": {
+                        "top": "Eight"
+                      }
+                    },
+                    "wildcard_as": []
+                  }
+                }
+              },
+              {
+                "Played": {
+                  "seat": 1,
+                  "play": {
+                    "cards": [
+                      {
+                        "Standard": {
+                          "rank": "Nine",
+                          "suit": "Club"
+                        }
+                      },
+                      {
+                        "Standard": {
+                          "rank": "Ten",
+                          "suit": "Spade"
+                        }
+                      },
+                      {
+                        "Standard": {
+                          "rank": "Jack",
+                          "suit": "Heart"
+                        }
+                      },
+                      {
+                        "Standard": {
+                          "rank": "Queen",
+                          "suit": "Diamond"
+                        }
+                      },
+                      {
+                        "Standard": {
+                          "rank": "King",
+                          "suit": "Spade"
+                        }
+                      }
+                    ],
+                    "combo": {
+                      "Straight": {
+                        "top": "King"
+                      }
+                    },
+                    "wildcard_as": []
+                  }
+                }
+              },
+              {
+                "Passed": {
+                  "seat": 2
+                }
+              },
+              {
+                "Passed": {
+                  "seat": 3
+                }
+              },
+              {
+                "Passed": {
+                  "seat": 0
+                }
+              }
+            ],
+            "winner": 1,
+            "next_leader": 1
+          },
+          "finish_order": [],
+          "deal_start": {
+            "Tribute": {
+              "exchanges": [
+                {
+                  "payer": 0,
+                  "receiver": 1,
+                  "tribute": {
+                    "Joker": "Small"
+                  },
+                  "returned": {
+                    "Standard": {
+                      "rank": "Three",
+                      "suit": "Club"
+                    }
+                  }
+                },
+                {
+                  "payer": 2,
+                  "receiver": 3,
+                  "tribute": {
+                    "Standard": {
+                      "rank": "Five",
+                      "suit": "Club"
+                    }
+                  },
+                  "returned": {
+                    "Standard": {
+                      "rank": "Four",
+                      "suit": "Diamond"
+                    }
+                  }
+                }
+              ],
+              "leader": 0
+            }
+          },
+          "can_take_back": false,
+          "took_back": null
+        }
+      }
+    }
+  }
+}
