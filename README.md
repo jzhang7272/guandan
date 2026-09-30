@@ -1,5 +1,7 @@
 # guandan
 
+Play this game at https://daguandan.cc
+
 A self-hostable [Guandan (掼蛋)](https://www.pagat.com/climbing/guan_dan.html)
 server. Four friends open a link in a web browser (desktop or phone) and play
 live. It's a single Rust binary with the web client built in: no database,
@@ -15,8 +17,8 @@ no separate frontend build, no external services.
 - English or Simplified Chinese (简体中文): the **EN | 中文** toggle in the
   top-left corner of every page switches instantly, using real 掼蛋 terms
   (级牌, 进贡, 头游, 双下…). Each player picks their own language.
-- Take back your last play (悔牌) until the next player acts, unless it
-  ended the deal.
+- Take back your last play or pass (悔牌) until the next player acts,
+  unless it ended the deal (a play) or the trick (a pass).
 - Automatic reconnection during a match: refresh a tab, or come back on
   another device under the same name, and you get your seat and hand back.
   (Before the first deal, leaving the lobby frees your seat.)
@@ -66,7 +68,7 @@ PORT=9000 ABANDON_AFTER_MINS=60 cargo run --release
 
 | Parameter | Example | What it does |
 |---|---|---|
-| `?name=` | `/482193?name=Josey` | Join with this name without typing it in. |
+| `?name=` | `/482193?name=foo` | Join with this name without typing it in. |
 | `?lang=` | `/482193?lang=zh` | Show this page load in `zh` (Chinese) or `en` (English), without changing the saved choice. Otherwise the page uses the language last picked with the toggle, or on a first visit the browser's language. |
 | `?debug=1` | `/482193?debug=1` | Open the debug panel (raw game state and the last 20 messages). The **≡** button in the top-right corner toggles it too. |
 
@@ -115,8 +117,9 @@ return a tribute) shows **▶ Your turn** in its title, so you know which tab to
 switch to. Each tab keeps its own session, so once the match has started,
 refreshing a tab keeps its seat, and closing a tab and reopening it with the
 same `?name=` takes the seat back. In the lobby before the first deal, a tab
-that leaves gives up its seat and rejoins in the first free one. The language choice is shared by every tab
-of a browser; add `&lang=zh` or `&lang=en` to a tab's link to mix languages.
+that leaves gives up its seat and rejoins in the first free one. The language
+choice is shared by every tab of a browser; add `&lang=zh` or `&lang=en` to a
+tab's link to mix languages.
 
 ## Development
 

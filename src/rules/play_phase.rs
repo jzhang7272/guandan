@@ -169,8 +169,9 @@ impl PlayPhase {
 
     /// `seat` takes back the play or pass it just made (GAME_RULES.md house
     /// rule #10): everything it changed goes back to how it was, and it's
-    /// `seat`'s turn again. A pass that ended the trick reopens it. Only one
-    /// step back, and only until someone else acts.
+    /// `seat`'s turn again. Only one step back, and only until someone else
+    /// acts. A play that ended the deal and a pass that ended the trick leave
+    /// no undo point, so they can't be taken back.
     pub fn take_back(&mut self, seat: SeatId) -> Result<PlayOutcome, ActionError> {
         if !self.can_take_back(seat) {
             return Err(ActionError::NothingToTakeBack);
