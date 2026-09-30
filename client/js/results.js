@@ -10,6 +10,7 @@
 //       is no last deal. Used by lobby.js.
 import { el } from "./dom.js";
 import { store } from "./store.js";
+import { cardRow } from "./cards.js";
 import { rankLabel, seatName, placeLabel, teamName } from "./format.js";
 import { t } from "./i18n.js";
 
@@ -19,16 +20,22 @@ const teamIndex = (team) => (team === "A" ? 0 : 1);
 
 // lastDealSummary(lastDeal, names, you) → null (no last deal) or
 //   {
-//     matchWinner: "A" | "B" | null,     // set → the match-won banner
-//     headline:    "Team East-West wins 1-3",
-//     places:      "Alex 1st, Sam 2nd, Robin 3rd, Josey 4th",   // no parentheses
-//     levels:      [{ text: "Team East-West: 6 → 8", changed: true }, …]  // deal's winners first
-//     notes:       [{ text, bad }]       // dropped-to-two / failed A attempt
+//     matchWinner: "A" | "B" | null,     // set → the match-won band, no score tiles
+//     winTeam:     "A" | "B",            // the deal's winners (the strip's colour)
+//     headline:    "East-West wins!",
+//     finish:      "1-3"                 // ZH "1-2 双下" for a 1-2
+//     places:      "Alex 1st, Sam 2nd, Robin 3rd, Josey 4th",
+//     levels:      [{ team, name, from, to, changed, yours, attempts }, …]  // deal's winners first
+//                  // attempts: { text: "Attempts: 1/3", bad } for a team whose A attempt
+//                  // just failed (bad: it dropped back to 2), else null
+//     finalPlay:   { cards, level, who: "Robin played:" } | null
 //   }
-// Teams are shown by their compass names (format.js teamName). The deal's
-// final play is not shown (LOBBY_LOOK_SPEC §1). Display only: every value
-// comes from the server's DealSummary; nothing here decides a rule. The
-// text is in the current language (i18n.js t()).
+// Teams are shown by their compass names (format.js teamName). finalPlay is
+// the play that ended the deal: the last Played entry of final_trick (null
+// when there is none). Its level is the deal's level (from summary.before),
+// for the cards' level / wildcard marks. Display only: every value comes from
+// the server's DealSummary; nothing here decides a rule. The text is in the
+// current language (i18n.js t()).
 export function lastDealSummary(lastDeal, names, you) {
   const summary = lastDeal?.summary;
   if (!summary) return null;
@@ -48,73 +55,116 @@ export function lastDealSummary(lastDeal, names, you) {
     places: order.map((seat, i) => t("results.place", { name: seatName(names, seat), place: placeLabel(i) })),
   });
 
+  // The declaring team's A attempt failed (it was at A and didn't win the
+  // match): its counter after the deal, or 3 when it dropped back to Two
+  // (the counter is already reset to 0 in `after` then) — Decision 24.
+  const declaring = before.declaring;
+  const failedAt = declaring && before.team_levels?.[teamIndex(declaring)] === "Ace"
+    && summary.match_winner !== declaring ? declaring : null;
+  const attemptsOf = (team) => {
+    if (team !== failedAt) return null;
+    const dropped = summary.dropped_to_two === team;
+    const n = dropped ? 3 : after.a_attempts?.[teamIndex(team)] ?? "?";
+    return { text: t("common.aTries", { n }), bad: dropped };
+  };
+
   // Levels before → after, the deal's winners first.
   const levels = [winTeam, loseTeam].map((team) => {
     const i = teamIndex(team);
     const from = before.team_levels?.[i];
     const to = after.team_levels?.[i];
-    const yours = you !== null && you !== undefined && teamOf(you) === team;
-    const text = t(yours ? "results.levelYours" : "results.level",
-      { team: teamName(team), from: rankLabel(from), to: rankLabel(to) });
-    return { text, changed: from !== to };
+    return {
+      team,
+      name: teamName(team),
+      from: rankLabel(from),
+      to: rankLabel(to),
+      changed: from !== to,
+      yours: you !== null && you !== undefined && teamOf(you) === team,
+      attempts: attemptsOf(team),
+    };
   });
-
-  const notes = [];
-  if (summary.dropped_to_two) {
-    notes.push({ text: t("results.droppedToTwo", { team: teamName(summary.dropped_to_two) }), bad: true });
-  }
-  // A-attempt line: the declaring team was at A and didn't win the match
-  // with this deal. A team that just dropped to Two is covered by the line
-  // above (its counter is already reset to 0 in `after`) — Decision 24.
-  const declaring = before.declaring;
-  if (declaring && before.team_levels?.[teamIndex(declaring)] === "Ace"
-      && summary.match_winner !== declaring && summary.dropped_to_two !== declaring) {
-    const n = after.a_attempts?.[teamIndex(declaring)] ?? "?";
-    notes.push({ text: t("results.aAttemptFailed", { team: teamName(declaring), n }), bad: false });
-  }
 
   return {
     matchWinner: summary.match_winner || null,
-    headline: t("results.wins", { team: teamName(winTeam), finish }),
+    winTeam,
+    headline: t("results.wins", { team: teamName(winTeam) }),
+    finish: t("results.finish", { finish }),
     places,
     levels,
-    notes,
+    finalPlay: finalPlayOf(lastDeal.final_trick, before, names),
   };
 }
 
+// The deal's level: the declaring team's level before the deal (a match's
+// first deal has no declaring team and is played at 2).
+function dealLevel(before) {
+  const d = before.declaring;
+  return d ? before.team_levels?.[teamIndex(d)] ?? null : "Two";
+}
+
+// The last Played entry of the final trick (passes skipped) → finalPlay.
+function finalPlayOf(finalTrick, before, names) {
+  if (!Array.isArray(finalTrick)) return null;
+  for (let i = finalTrick.length - 1; i >= 0; i--) {
+    const played = finalTrick[i]?.Played;
+    if (!played?.play) continue;
+    return {
+      cards: played.play.cards || [],
+      level: dealLevel(before),
+      who: t("results.played", { name: seatName(names, played.seat) }),
+    };
+  }
+  return null;
+}
+
+// The card (docs/mockups/last_deal_mockup.html, option D):
+// a header band with the title; below it the final play on a patch of felt
+// on the left, and on the right the winners' strip (headline, finish badge,
+// places) over one score tile per team (level before → after, A attempts).
+// A match win turns the band gold with the trophy title and drops the tiles
+// (the levels are back to 2, which the band says).
 export function renderLastDeal() {
   const s = store.state;
   const d = lastDealSummary(s?.room?.Lobby?.last_deal, s?.seats, s?.your_seat);
   if (!d) return null;
 
   const won = Boolean(d.matchWinner);
-  const lines = [];
+  const band = el("header", { class: "sec-band" },
+    el("h2", {}, won ? t("results.matchWon", { team: teamName(d.matchWinner) }) : t("results.lastDeal")),
+    won ? el("span", { class: "sec-band-note" }, t("results.levelsBack")) : null);
 
-  // The match-won banner replaces the "Last deal" title.
-  if (won) {
-    lines.push(el("h2", { class: "results-headline" },
-      t("results.matchWon", { team: teamName(d.matchWinner) })));
-  } else {
-    lines.push(el("h2", { class: "results-title" }, t("results.lastDeal")));
-  }
+  const felt = d.finalPlay
+    ? el("div", { class: "results-felt" },
+      el("span", { class: "results-who" }, d.finalPlay.who),
+      cardRow(d.finalPlay.cards, d.finalPlay.level, { small: true }))
+    : null;
 
-  lines.push(el("p", { class: "results-deal" },
-    el("strong", {}, won ? t("results.finalDeal", { headline: d.headline }) : d.headline),
-    d.places ? el("span", { class: "results-places" }, t("results.placesParen", { places: d.places })) : null));
+  const strip = el("div", { class: `results-strip team-${d.winTeam.toLowerCase()}` },
+    el("div", { class: "results-headline" },
+      el("span", { class: "results-win" }, d.headline), " ",
+      el("span", { class: "results-finish" }, d.finish)),
+    el("div", { class: "results-places" }, d.places));
 
-  // After a match win the levels are back to 2 (the banner says so), so the
-  // before → after line of the winning deal would only confuse.
-  if (!won) {
-    lines.push(el("p", { class: "results-levels" },
-      d.levels.map((l) => el("span", { class: l.changed ? "results-level is-changed" : "results-level" }, l.text))));
-  }
-
-  for (const n of d.notes) {
-    lines.push(el("p", { class: n.bad ? "results-note is-bad" : "results-note" }, n.text));
-  }
+  const tile = (l) => el("div", { class: `results-tile team-${l.team.toLowerCase()}` },
+    el("span", { class: "results-tile-name" },
+      el("span", {}, l.name),
+      l.yours ? el("span", { class: "results-tile-you" }, t("results.yourTeam")) : null),
+    el("span", { class: "results-score" },
+      el("span", { class: "results-levels" },
+        l.changed ? [el("span", {}, l.from), el("span", { class: "results-arrow" }, "→")] : null,
+        el("span", {}, l.to)),
+      l.attempts
+        ? el("span", { class: l.attempts.bad ? "results-attempts is-bad" : "results-attempts" }, l.attempts.text)
+        : null));
 
   return el("section", {
     class: won ? "results-panel is-match-over" : "results-panel",
     "aria-label": won ? t("results.matchWonAria") : t("results.lastDeal"),
-  }, lines);
+  },
+  band,
+  el("div", { class: felt ? "results-body" : "results-body no-felt" },
+    felt,
+    el("div", { class: "results-right" },
+      strip,
+      won ? null : el("div", { class: "results-board" }, d.levels.map(tile)))));
 }

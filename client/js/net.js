@@ -11,22 +11,24 @@ import { store, update } from "./store.js";
 import { onNewState, onClassified, dealKeyOf } from "./hand.js";
 import { closeResetConfirm } from "./table.js";
 import { routeFromPath, parseRoomCode } from "./home.js";
-import { returnsLine, seatName } from "./format.js";
+import { cardLabel, dealStartLine, returnsLine, seatName, sortHand } from "./format.js";
 import { t } from "./i18n.js";
 
-// sessionStorage (per tab), one token per room: "token:XYZ234" (§6.1).
+// sessionStorage (per tab), one token per room: "token:482193" (§6.1).
 const tokenKey = (code) => `token:${code}`;
 const NAME_KEY = "guandan.name";         // sessionStorage (per tab)
 const LAST_NAME_KEY = "guandan.lastName"; // localStorage (form prefill only)
 // sessionStorage (per tab): the dealKey whose returns notice was shown, so a
 // deal shows it once.
 const RETURNS_SHOWN_KEY = "guandan.returnsShown";
+// The same for the anti-tribute notice.
+const ANTI_TRIBUTE_SHOWN_KEY = "guandan.antiTributeShown";
 
 const BACKOFF_MS = [500, 1000, 2000, 4000]; // then every 5s
 const BACKOFF_MAX_MS = 5000;
 const TOAST_MS = 4000;
-const TAKE_BACK_NOTICE_MS = 3500; // "Josey took back their play"
-const RETURNS_NOTICE_MS = 6000;   // "Returns: Alex → Josey 3♣, …" (§3: about 6s)
+const TAKE_BACK_NOTICE_MS = 3500; // "Josey took back their move"
+const RETURNS_NOTICE_MS = 6000;   // "Returns: Alex → Josey 3♣, …" (§3: about 6s); also anti-tribute
 const LOG_MAX = 20;
 
 const params = new URLSearchParams(location.search);
@@ -99,7 +101,7 @@ export function connect() {
   }
   if (!route.code) {
     // One path segment that can't be an invite code: no need to ask.
-    store.roomCode = route.raw.toUpperCase();
+    store.roomCode = route.raw;
     store.roomStatus = "missing";
     store.conn = "idle";
     update();
@@ -140,7 +142,12 @@ export function rememberName(name) {
 
 // Send a ClientMessage. In fixture mode nothing is sent; the would-be message
 // is logged to the debug panel instead.
+// The cards of the last Play sent, so a rejection can say which cards it
+// was about (a Rejected reply goes only to the player who sent it).
+let lastPlayCards = null;
+
 export function send(msg) {
+  if (msg && msg.type === "Play") lastPlayCards = msg.cards;
   if (fixtureMode) {
     log("out (fixture: not sent)", msg);
   } else if (ws && ws.readyState === WebSocket.OPEN) {
@@ -371,11 +378,21 @@ function showToast(text) {
 // A Rejected message's text, by its code in the current language
 // (LANGUAGE_SPEC §4.3). A code with no string (t() → "?error.X?") falls
 // back to the server's English message.
-export function rejectedText(msg) {
+// Rejections about the cards you just tried to play also list those cards,
+// strongest first like your hand, e.g. "That play doesn't beat the current
+// play: 9♠ 9♦".
+const CARD_ERRORS = new Set(["NotAValidCombo", "DoesNotBeatCurrent", "InvalidDeclaration", "CardsNotInHand"]);
+
+export function rejectedText(msg, cards = lastPlayCards) {
   const key = `error.${msg.code}`;
-  const text = t(key);
-  if (text !== `?${key}?`) return text;
-  return msg.message || String(msg.code);
+  const known = t(key);
+  const text = known !== `?${key}?` ? known : msg.message || String(msg.code);
+  if (CARD_ERRORS.has(msg.code) && Array.isArray(cards) && cards.length > 0) {
+    const level = store.state?.room?.InGame?.phase?.Playing?.level ?? store.lastLevel ?? null;
+    const list = sortHand(cards, level).map(cardLabel).join(" ");
+    return t("error.withCards", { message: text, cards: list });
+  }
+  return text;
 }
 
 // A game notice on the felt (table.js draws store.notice): neutral, not an
@@ -397,11 +414,15 @@ function playingOf(state) {
 
 // The notices a State brings, decided on the State transition (prev → next),
 // never on a re-render, so each shows once:
-//   - took_back newly set: "<name> took back their play", to everyone (§1).
+//   - took_back newly set: "<name> took back their move", to everyone (§1).
 //     A later State that still carries the same took_back (e.g. someone
 //     reconnects) doesn't repeat it;
 //   - Tribute → Playing after a tribute: the returns, to everyone (§3); once
-//     per deal (remembered by dealKey), so it isn't shown again later.
+//     per deal (remembered by dealKey), so it isn't shown again later;
+//   - an anti-tribute deal (no Tribute phase: it starts straight in Playing)
+//     when play begins: "Anti-tribute: … — no tribute. <leader> leads.", to
+//     everyone, once per deal (dealKey, as for the returns). Only while
+//     nobody has played yet, so a tab joining mid-deal isn't told who leads.
 function stateNotices(prev, next) {
   const p = playingOf(next);
   if (!p) return;
@@ -418,6 +439,21 @@ function stateNotices(prev, next) {
       showNotice(returns, RETURNS_NOTICE_MS);
     }
   }
+  const anti = p.deal_start?.AntiTribute;
+  if (anti && !playingOf(prev) && dealNotStarted(p, anti.leader)) {
+    const key = dealKeyOf(next);
+    if (key === null || getItem(session(), ANTI_TRIBUTE_SHOWN_KEY) !== key) {
+      setItem(session(), ANTI_TRIBUTE_SHOWN_KEY, key);
+      showNotice(dealStartLine(p.deal_start, next.seats), RETURNS_NOTICE_MS);
+    }
+  }
+}
+
+// Nothing played yet this deal: the leader to act on an empty trick, no
+// earlier trick, nobody out.
+function dealNotStarted(p, leader) {
+  return p.turn === leader && (p.trick || []).length === 0 && !p.last_trick
+    && (p.finish_order || []).length === 0;
 }
 
 function handleMessage(msg) {

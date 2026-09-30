@@ -1,7 +1,8 @@
 // Your hand + action bar during Playing, reading picker (UI_SPEC §3.4, §3.5).
 //
 // Server actions: Play (Play button, reading picker), Pass and TakeBack
-// (GAME_PAGE_V3_SPEC §1: undo your last play until the next player acts). Local UI
+// (GAME_PAGE_V3_SPEC §1: undo your last play or pass until the next player
+// acts; house rule #10). Local UI
 // state: store.selected (indices into your_hand — hands have duplicates, so
 // never card values). The hand itself (stacks, groups, their toolbar and
 // tapping to select) is hand.js renderHand().
@@ -46,7 +47,8 @@ export function renderPlayControls() {
   const canPlay = yourTurn && picked.length > 0;
   const canPass = yourTurn && !trickEmpty;
   // The server says when a take back is possible (only for the player who
-  // just played, until the next player acts). Absent (an older server) → no.
+  // just played or passed, until the next player acts; also right after a
+  // trick-ending pass, when the trick area is empty). Absent → no.
   const canTakeBack = p.can_take_back === true;
 
   const onPlay = () => {
@@ -85,8 +87,11 @@ export function renderPlayControls() {
   );
 
   // Trick buttons (about the current trick, not the deal): top right of the
-  // hand box, on the same line as Group / Ungroup / Clear groups.
-  const trickActions = el("div", { class: "trick-actions" },
+  // hand box, on the same line as Group / Ungroup / Clear groups. Once you're
+  // out there's no hand (so no toolbar) and the box is just the action bar:
+  // then they get their own right-aligned row above it (is-own-row), so
+  // they don't sit on top of Deselect / Pass / Play.
+  const trickActions = el("div", { class: row ? "trick-actions" : "trick-actions is-own-row" },
     el("button", {
       type: "button",
       class: "take-back-btn",

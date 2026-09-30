@@ -16,24 +16,25 @@ import { t } from "./i18n.js";
 // Matches the server's limit (TECH_SPEC §6); the server still validates.
 const NAME_MAX = 20;
 
-// Invite codes (LOBBY_FLOW_SPEC §5.1): 6 characters, no 0 O 1 I L.
-export const CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+// Invite codes (LOBBY_FLOW_SPEC §5.1): 6 digits, e.g. "482193". Leading
+// zeros count ("012345"), so a code is always a string, never a number.
 export const CODE_LENGTH = 6;
-const CODE_RE = new RegExp(`^[${CODE_ALPHABET}]{${CODE_LENGTH}}$`);
+const CODE_RE = new RegExp(`^[0-9]{${CODE_LENGTH}}$`);
 
 // ---------- pure helpers (checked in tests.html) ----------
 
-// "xyz234" → "XYZ234"; anything that isn't a valid code (after trimming and
-// uppercasing, like the server's parser) → null.
+// " 482193 " → "482193"; anything that isn't exactly 6 ASCII digits after
+// trimming (like the server's parser) → null.
 export function parseRoomCode(text) {
-  const code = String(text ?? "").trim().toUpperCase();
+  const code = String(text ?? "").trim();
   return CODE_RE.test(code) ? code : null;
 }
 
 // What the player typed in Home's invite-code box → the code to try.
 // Pasting the whole invite link works too (its last path segment is the
-// code); spaces and dashes are dropped ("xyz 234", "XYZ-234"). Not
-// validated here: see parseRoomCode.
+// code). Full-width digits (a Chinese keyboard's "４８２１９３") become
+// ASCII ones, then everything that isn't a digit is dropped ("482 193",
+// "482-193"). Not validated here: see parseRoomCode.
 export function codeFromInput(text) {
   let s = String(text ?? "").trim();
   const q = s.search(/[?#]/);
@@ -41,13 +42,15 @@ export function codeFromInput(text) {
   s = s.replace(/\/+$/, "");
   const slash = s.lastIndexOf("/");
   if (slash >= 0) s = s.slice(slash + 1);
-  return s.replace(/[\s-]+/g, "").toUpperCase();
+  return s
+    .replace(/[\uFF10-\uFF19]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xFF10 + 48))
+    .replace(/[^0-9]+/g, "");
 }
 
 // location.pathname → which page to show (§6.1):
 //   { page: "home" }                     "/" (and "/…/index.html": the static
 //                                        fixture server, when not in fixture mode)
-//   { page: "room", code: "XYZ234" }     "/XYZ234" or "/xyz234/"
+//   { page: "room", code: "482193" }     "/482193" or "/482193/"
 //   { page: "room", code: null, raw }    one path segment that can't be a code
 //                                        (shown as "No game with code …")
 //   anything else                        home
@@ -110,18 +113,19 @@ function onJoin(ev) {
   ev.preventDefault();
   const name = requireName();
   if (!name) return;
-  const typed = codeFromInput(store.homeCode ?? "");
-  if (!typed) {
+  const raw = String(store.homeCode ?? "").trim();
+  if (!raw) {
     store.homeError = { field: "code", key: "home.errCodeMissing" };
     update();
     return;
   }
-  const code = parseRoomCode(typed);
+  const code = parseRoomCode(codeFromInput(raw));
   if (!code) {
+    // Quote what they typed, not the digits left after stripping.
     store.homeError = {
       field: "code",
       key: "home.errCodeInvalid",
-      params: { typed: typed.slice(0, 20), length: CODE_LENGTH },
+      params: { typed: raw.slice(0, 20), length: CODE_LENGTH },
     };
     update();
     return;
@@ -179,7 +183,9 @@ export function renderHome() {
 
       el("div", { class: "home-or", role: "separator" }, el("span", {}, t("home.or"))),
 
-      el("form", { class: "home-join", onSubmit: onJoin, autocomplete: "off" },
+      // novalidate: the input's pattern is only a keyboard hint; onJoin
+      // cleans up "482 193" or a pasted link, which the pattern would block.
+      el("form", { class: "home-join", onSubmit: onJoin, autocomplete: "off", novalidate: true },
         el("label", { class: "home-label", for: "home-code" }, t("home.inviteCode")),
         el("div", { class: "home-join-row" },
           el("input", {
@@ -187,7 +193,10 @@ export function renderHome() {
             type: "text",
             value: store.homeCode ?? "",
             placeholder: t("home.codePlaceholder"),
-            autocapitalize: "characters",
+            // A number pad on phones (pattern is iOS's hint); type stays
+            // "text" so a pasted "482 193" or invite link isn't refused.
+            inputmode: "numeric",
+            pattern: "[0-9]*",
             spellcheck: "false",
             "aria-invalid": err?.field === "code" ? "true" : null,
             "aria-describedby": err?.field === "code" ? "home-code-error" : null,

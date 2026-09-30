@@ -12,7 +12,7 @@ export const EN = {
   "common.cancel": "Cancel",
   "common.listSep": ", ", // i18n.js list(): "a, b and c"
   "common.listLast": " and ",
-  "common.aTries": ({ n }) => `A-tries ${n}/3`, // lobby.js settings, table.js ribbon
+  "common.aTries": ({ n }) => `Attempts: ${n}/3`, // failed A attempts: lobby settings, table.js ribbon, results.js tiles
 
   // ---------- language toggle (main.js); the same in both languages ----------
   "lang.groupAria": "Language / 语言",
@@ -35,13 +35,13 @@ export const EN = {
   "home.creating": "Creating…",
   "home.or": "or",
   "home.inviteCode": "Invite code",
-  "home.codePlaceholder": "XYZ234",
+  "home.codePlaceholder": "482193",
   "home.joinGame": "Join game",
   "home.errNameFirst": "Enter your name first.",
   "home.errCodeMissing": "Enter the invite code you were given.",
   // typed = what was typed (first 20 characters), length = CODE_LENGTH
   "home.errCodeInvalid": ({ typed, length }) =>
-    `“${typed}” isn't an invite code: codes are ${length} letters and digits, like XYZ234.`,
+    `“${typed}” isn't an invite code: codes are ${length} digits, like 482193.`,
   "home.errServerFull": "The server is full right now (too many games). Try again in a few minutes.",
   "home.errCreateFailed": "Couldn't create a game — is the server running? Try again.",
 
@@ -63,11 +63,11 @@ export const EN = {
   "lobby.copied": "Copied ✓",
   "lobby.inviteManualAria": "Invite link — copy it by hand",
   // Team section heading and aria: team.named. The pill:
-  "lobby.yourTeam": "your team",
-  "lobby.you": "you", // next to your name in your spot
-  "lobby.connected": "connected",
-  "lobby.offline": "offline",
-  "lobby.ready": "ready", // ✓ title / aria
+  "lobby.yourTeam": "Your team",
+  "lobby.you": "You", // next to your name in your spot
+  "lobby.connected": "Connected",
+  "lobby.offline": "Offline",
+  "lobby.ready": "Ready", // ✓ title / aria
   "lobby.sitHere": "Sit here",
   "lobby.empty": "Empty",
   "lobby.imReady": "I'm ready",
@@ -89,7 +89,7 @@ export const EN = {
   "lobby.levelSuffix": " level", // after the bold team name: "<strong>North-South</strong> level"
   "lobby.declaring": "Declaring",
   "lobby.declaringAria": "Declaring team",
-  "lobby.declaringNone": "none — first deal at 2",
+  "lobby.declaringNone": "None — first deal at 2",
   "lobby.newMatch": "New match…",
   "lobby.newMatchAria": "Confirm new match",
   "lobby.startOverQuestion": "Start over? Levels go back to 2 and seats unlock.",
@@ -103,18 +103,16 @@ export const EN = {
 
   // ---------- results.js: Last deal card / match-won banner ----------
   // team = format.js teamName(...); finish = "1-2" | "1-3" | "1-4".
-  "results.lastDeal": "Last deal", // title and aria
+  "results.lastDeal": "Last deal", // band title and aria
   "results.matchWonAria": "Match won",
-  "results.matchWon": ({ team }) => `🏆 Team ${team} won the match! Levels are back to 2.`,
-  "results.wins": ({ team, finish }) => `Team ${team} wins ${finish}`,
-  "results.finalDeal": ({ headline }) => `Final deal — ${headline}`, // headline = results.wins
+  "results.matchWon": ({ team }) => `🏆 ${team} won the match!`, // band title
+  "results.levelsBack": "Levels are back to 2.", // band note after a match win
+  "results.played": ({ name }) => `${name} played:`, // over the final play's cards
+  "results.wins": ({ team }) => `${team} wins!`,
+  "results.finish": ({ finish }) => finish, // "1-2" | "1-3" | "1-4" badge
   "results.place": ({ name, place }) => `${name} ${place}`, // place = format.js placeLabel
   "results.places": ({ places }) => places.join(", "), // places: array of results.place
-  "results.placesParen": ({ places }) => `(${places})`, // places = results.places
-  "results.level": ({ team, from, to }) => `Team ${team}: ${from} → ${to}`,
-  "results.levelYours": ({ team, from, to }) => `Team ${team} (you): ${from} → ${to}`,
-  "results.droppedToTwo": ({ team }) => `Team ${team} failed at A three times — back to 2.`,
-  "results.aAttemptFailed": ({ team, n }) => `Team ${team}: A attempt ${n} of 3 failed`,
+  "results.yourTeam": "(your team)", // in a score tile
 
   // ---------- table.js: header ribbon, pennant, Redeal ----------
   // Side names: team.named (long), format.js teamRelative (short).
@@ -123,7 +121,7 @@ export const EN = {
   // (number) for a team at A, else null.
   "table.sideAria": ({ team, mine, level, declaring, tries }) =>
     `Team ${team}${mine ? " (your team)" : ""}: level ${level}`
-    + `${declaring ? ", declaring" : ""}${tries !== null && tries !== undefined ? `, A-tries ${tries}/3` : ""}`,
+    + `${declaring ? ", declaring" : ""}${tries !== null && tries !== undefined ? `, attempts: ${tries}/3` : ""}`,
   "table.pennantLabel": "level",
   "table.pennantTitle": ({ level }) => `This deal is played at level ${level}`,
   "table.pennantAria": ({ level }) => `Deal level ${level}`,
@@ -134,17 +132,17 @@ export const EN = {
   // ---------- table.js: seat plates ----------
   "table.partner": "(partner)",
   "table.you": ({ name }) => `You (${name})`,
-  "table.cardsLeft": "cards left",
-  "table.offline": "offline",
-  "table.disconnected": "disconnected",
+  "table.cardsLeft": "Cards left",
+  "table.offline": "Offline",
+  "table.disconnected": "Disconnected",
   "table.turn": "TURN",
-  "table.playsNext": "plays next",
+  "table.playsNext": "Plays next",
 
   // ---------- table.js: felt ----------
   "table.passCard": "PASS", // the pass card in a seat's pile
   "table.pass": "Pass", // its hover / aria
   "table.leads": ({ name }) => `${name} leads`,
-  "table.jiefeng": ({ a, b }) => `接风 — ${a} went out, partner ${b} leads`, // a went out, b leads
+  "table.jiefeng": ({ a, b }) => `${a} went out — partner ${b} leads`, // 接风: a went out, b leads
   "table.tributeBeforeDeal": "Tribute before the deal",
 
   // ---------- play.js: action bar, reading picker ----------
@@ -155,7 +153,7 @@ export const EN = {
   "play.selected": ({ n }) => `${n} selected`,
   "play.clear": "Deselect",
   "play.takeBack": "Take back",
-  "play.takeBackTitle": "Take back your last play",
+  "play.takeBackTitle": "Take back your last move (a play or a pass)",
   "play.pass": "Pass",
   "play.play": "Play",
   "reading.title": "Which play do you mean?", // heading and aria
@@ -172,11 +170,11 @@ export const EN = {
   "tribute.aria": "Tribute",
   "tribute.titleSingle": "Tribute (single)",
   "tribute.titleDouble": "Tribute (double)",
-  "tribute.paidPrefix": "paid: ", // followed by the card chip
-  "tribute.paid": "paid",
-  "tribute.waitingTribute": "tribute: waiting…",
-  "tribute.returnHidden": "return: ✓ (hidden)",
-  "tribute.returnWaiting": "return: waiting…",
+  "tribute.paidPrefix": "Paid: ", // followed by the card chip
+  "tribute.paid": "Paid",
+  "tribute.waitingTribute": "Tribute: waiting…",
+  "tribute.returnHidden": "Return: ✓ (hidden)",
+  "tribute.returnWaiting": "Return: waiting…",
   // name = who you pay / return to; null when unknown (no " to …").
   "tribute.taskPay": ({ name }) =>
     `Your task: choose a card to pay as tribute${name ? ` to ${name}` : ""}.`,
@@ -189,39 +187,41 @@ export const EN = {
   "tribute.returnButton": "Return card",
 
   // ---------- cards.js ----------
-  "cards.wildcard": "wildcard", // the gold dot's title
+  "cards.wildcard": "Wildcard", // the gold dot's title
   "cards.wildcardAria": ({ card }) => `${card} (wildcard)`, // card = format.js cardLabel
 
   // ---------- net.js: toast, notices ----------
   "net.notConnected": "Not connected — try again in a moment.",
-  "net.tookBack": ({ name }) => `${name} took back their play`,
+  "net.tookBack": ({ name }) => `${name} took back their move`,
 
   // ---------- net.js: Rejected, by code (the server's English text) ----------
-  "error.WrongPhase": "that action isn't allowed right now",
-  "error.NotYourTurn": "it is not your turn",
-  "error.CardsNotInHand": "those cards are not in your hand",
-  "error.NotAValidCombo": "those cards don't form a valid combination",
-  "error.DoesNotBeatCurrent": "that play doesn't beat the current play",
-  "error.InvalidDeclaration": "those cards can't be played as the declared combination",
-  "error.CannotPassWhenLeading": "you can't pass when you are leading",
-  "error.NothingToTakeBack": "there's no play of yours to take back",
-  "error.NotATributePayer": "you don't owe a tribute",
-  "error.AlreadyPaid": "you have already paid your tribute",
-  "error.InvalidTributeCard": "that card can't be paid as tribute",
-  "error.NotATributeReceiver": "you aren't receiving a tribute",
-  "error.TributeNotComplete": "wait until every tribute has been paid",
-  "error.AlreadyReturned": "you have already returned a card",
-  "error.InvalidReturnCard": "that card can't be returned",
-  "error.NotJoined": "join the room first",
-  "error.AlreadyJoined": "you have already joined",
-  "error.InvalidName": "names must be 1 to 20 characters",
-  "error.NameTaken": "that name is already taken by a connected player",
-  "error.NoSeatsAvailable": "all seats are taken",
-  "error.NotInDeal": "there is no deal in progress",
-  "error.NotInLobby": "that can only be done in the lobby",
-  "error.SeatTaken": "that seat is taken",
-  "error.SeatsLocked": "seats are locked during a match; start a new match to change seats",
-  "error.InvalidSettings": "once a deal has been played, a team must be declaring",
+  "error.WrongPhase": "That action isn't allowed right now",
+  "error.NotYourTurn": "It is not your turn",
+  "error.CardsNotInHand": "Those cards are not in your hand",
+  // A rejected play also lists the cards you tried (net.js rejectedText).
+  "error.withCards": ({ message, cards }) => `${message}: ${cards}`,
+  "error.NotAValidCombo": "Those cards don't form a valid combination",
+  "error.DoesNotBeatCurrent": "That play doesn't beat the current play",
+  "error.InvalidDeclaration": "Those cards can't be played as the declared combination",
+  "error.CannotPassWhenLeading": "You can't pass when you are leading",
+  "error.NothingToTakeBack": "There's nothing of yours to take back",
+  "error.NotATributePayer": "You don't owe a tribute",
+  "error.AlreadyPaid": "You have already paid your tribute",
+  "error.InvalidTributeCard": "That card can't be paid as tribute",
+  "error.NotATributeReceiver": "You aren't receiving a tribute",
+  "error.TributeNotComplete": "Wait until every tribute has been paid",
+  "error.AlreadyReturned": "You have already returned a card",
+  "error.InvalidReturnCard": "That card can't be returned",
+  "error.NotJoined": "Join the room first",
+  "error.AlreadyJoined": "You have already joined",
+  "error.InvalidName": "Names must be 1 to 20 characters",
+  "error.NameTaken": "That name is already taken by a connected player",
+  "error.NoSeatsAvailable": "All seats are taken",
+  "error.NotInDeal": "There is no deal in progress",
+  "error.NotInLobby": "That can only be done in the lobby",
+  "error.SeatTaken": "That seat is taken",
+  "error.SeatsLocked": "Seats are locked during a match; start a new match to change seats",
+  "error.InvalidSettings": "Once a deal has been played, a team must be declaring",
 
   // ---------- format.js: teams, seats, places ----------
   "team.A": "North-South",
@@ -275,7 +275,9 @@ export const EN = {
 
   // ---------- format.js: dealStartLine, returnsLine ----------
   "deal.firstDeal": ({ card, name }) => `First deal: ${card} was turned up — ${name} holds it and leads.`,
-  "deal.antiTribute": ({ name }) => `Anti-tribute (both Big Jokers held) — no tribute. ${name} leads.`,
+  // Also the anti-tribute notice when play begins (net.js). DealStart only
+  // carries the leader, so the payers are "the losing side".
+  "deal.antiTribute": ({ name }) => `Anti-tribute: the losing side holds both Big Jokers — no tribute. ${name} leads.`,
   "deal.exchange": ({ payer, receiver, tribute, returned }) =>
     `${payer} paid ${receiver} ${tribute}, got back ${returned}`,
   "deal.tribute": ({ exchanges, name }) => `${exchanges.join("; ")}. ${name} leads.`, // exchanges: array of deal.exchange

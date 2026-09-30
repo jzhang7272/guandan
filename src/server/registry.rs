@@ -17,26 +17,25 @@ use super::room::{Room, RoomEvent, RoomTimings};
 /// The most rooms one server keeps open at once.
 pub const MAX_ROOMS: usize = 100;
 
-/// A room's invite code: 6 characters from `CODE_ALPHABET`, always uppercase.
+/// A room's invite code: 6 digits, e.g. `482193`. Leading zeros are allowed
+/// (`012345` is a code), which is why a code is a string, not a number.
 ///
-/// The only ways to get one are `parse` (user input) and `random`, so every
+/// The only ways to get one are `parse` (a URL path) and `random`, so every
 /// `RoomCode` is well-formed.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct RoomCode(String);
 
 impl RoomCode {
-    /// Digits and uppercase letters without the look-alikes `0 O 1 I L`, so a
-    /// code read aloud or copied by hand comes out right.
-    pub const ALPHABET: &str = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+    /// Digits only: easy to read aloud and to type on a phone's number pad.
+    pub const ALPHABET: &str = "0123456789";
     pub const LEN: usize = 6;
 
-    /// Reads a code typed or pasted by a user: uppercased, then accepted only
-    /// if it is exactly `LEN` characters from `ALPHABET`.
+    /// Reads a code from a URL: accepted only if it is exactly `LEN` ASCII
+    /// digits (other scripts' digits, such as `١٢٣٤٥٦`, are rejected). The
+    /// home page strips the spaces people type before building the URL.
     pub fn parse(input: &str) -> Option<RoomCode> {
-        let upper = input.to_ascii_uppercase();
-        let well_formed =
-            upper.chars().count() == Self::LEN && upper.chars().all(|c| Self::ALPHABET.contains(c));
-        well_formed.then_some(RoomCode(upper))
+        let well_formed = input.len() == Self::LEN && input.bytes().all(|b| b.is_ascii_digit());
+        well_formed.then(|| RoomCode(input.to_string()))
     }
 
     /// A random code (possibly one already in use; `Registry::create` checks).
@@ -98,8 +97,8 @@ impl Registry {
                 return Err(RegistryFull);
             }
             let mut rng = self.rng.lock().expect("registry rng lock poisoned");
-            // With 31^6 ≈ 887 million codes and at most `max_rooms` in use,
-            // this almost always succeeds on the first try.
+            // With 10^6 = 1 million codes and at most `max_rooms` in use,
+            // a random code is almost always free on the first try.
             let code = loop {
                 let code = RoomCode::random(&mut *rng);
                 if !rooms.contains_key(&code) {
@@ -158,54 +157,49 @@ mod tests {
     }
 
     #[test]
-    fn random_codes_use_only_the_alphabet() {
+    fn random_codes_are_six_digits() {
         let mut rng = StdRng::seed_from_u64(7);
         for _ in 0..1000 {
             let code = RoomCode::random(&mut rng);
             assert_eq!(code.as_str().len(), RoomCode::LEN);
-            assert!(
-                code.as_str()
-                    .chars()
-                    .all(|c| RoomCode::ALPHABET.contains(c)),
-                "{code}"
-            );
+            assert!(code.as_str().chars().all(|c| c.is_ascii_digit()), "{code}");
             // Every generated code reads back as itself.
             assert_eq!(RoomCode::parse(code.as_str()), Some(code));
         }
     }
 
     #[test]
-    fn the_alphabet_has_no_look_alikes() {
-        assert_eq!(RoomCode::ALPHABET.len(), 31);
-        for c in ['0', 'O', '1', 'I', 'L'] {
-            assert!(!RoomCode::ALPHABET.contains(c), "{c}");
-        }
+    fn the_alphabet_is_the_ten_digits() {
+        assert_eq!(RoomCode::ALPHABET, "0123456789");
+        assert_eq!(RoomCode::LEN, 6);
     }
 
     #[test]
-    fn parse_uppercases() {
-        let code = RoomCode::parse("xyz234").unwrap();
-        assert_eq!(code.as_str(), "XYZ234");
-        assert_eq!(code.to_string(), "XYZ234");
-        assert_eq!(RoomCode::parse("XyZ234"), Some(code));
+    fn parse_accepts_six_digits() {
+        let code = RoomCode::parse("482193").unwrap();
+        assert_eq!(code.as_str(), "482193");
+        assert_eq!(code.to_string(), "482193");
+        // Leading zeros are part of the code.
+        assert_eq!(RoomCode::parse("012345").unwrap().as_str(), "012345");
+        assert!(RoomCode::parse("000000").is_some());
     }
 
     #[test]
     fn parse_rejects_bad_input() {
         for bad in [
             "",
-            "XYZ23",   // too short
-            "XYZ2345", // too long
-            "XYZ230",  // 0
-            "XYZ23O",  // O
-            "XYZ231",  // 1
-            "XYZ23I",  // I
-            "xyz23l",  // l → L
-            "XYZ 23",  // space
-            " XYZ234", // not trimmed
-            "XYZ-23",  // punctuation
+            "48219",   // too short
+            "4821930", // too long
+            "48219a",  // a letter
+            "ABCDEF",  // letters
+            "482 19",  // space
+            "482 193", // a space (the home page strips these; the server doesn't)
+            " 482193", // not trimmed
+            "482-19",  // punctuation
+            "+48219",  // a sign
             "style.css",
-            "XYZ23é",
+            "١٢٣٤٥٦",       // Arabic-Indic digits
+            "４８２１９３", // fullwidth digits
         ] {
             assert_eq!(RoomCode::parse(bad), None, "{bad:?}");
         }
@@ -229,7 +223,8 @@ mod tests {
         tokio::time::sleep(Duration::from_millis(1)).await;
         assert!(matches!(rx.try_recv(), Ok(ServerMessage::Joined { .. })));
 
-        let other = RoomCode::parse("ZZZZZZ").unwrap();
+        let other = RoomCode::parse("482193").unwrap();
+        assert_ne!(other, code);
         assert!(registry.get(&other).is_none());
     }
 

@@ -56,7 +56,7 @@ pub enum Action {
         declared: Option<Combo>,
     },
     Pass,
-    /// Take back your own play, if nobody has acted since (GAME_RULES.md
+    /// Take back your own play or pass, if nobody has acted since (GAME_RULES.md
     /// house rule #10).
     TakeBack,
     PayTribute {

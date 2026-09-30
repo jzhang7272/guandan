@@ -150,7 +150,8 @@ mod tests {
         assert!(matches!(state, ServerMessage::State(_)), "{state:?}");
 
         // An unknown code refuses the upgrade with a 404.
-        let unknown = tokio_tungstenite::connect_async(format!("ws://{addr}/ZZZZZZ/ws")).await;
+        assert_ne!(code, "482193");
+        let unknown = tokio_tungstenite::connect_async(format!("ws://{addr}/482193/ws")).await;
         match unknown {
             Err(tungstenite::Error::Http(response)) => assert_eq!(response.status(), 404),
             other => panic!("expected a 404, got {other:?}"),

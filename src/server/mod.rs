@@ -70,7 +70,7 @@ fn index_html() -> Response {
     static_file(content_type, body)
 }
 
-/// A redirect to the room's canonical address `/{CODE}`, keeping the query
+/// A redirect to the room's canonical address `/{code}`, keeping the query
 /// string (e.g. `?name=A` for solo testing, `?debug=1`).
 fn redirect_to_room(code: &RoomCode, query: Option<String>) -> Response {
     let location = match query {
@@ -81,12 +81,10 @@ fn redirect_to_room(code: &RoomCode, query: Option<String>) -> Response {
 }
 
 /// `GET /{code}`: the game page, whether or not the room exists (the client
-/// asks `/api/rooms/{code}` for that). A lowercase code redirects to the
-/// uppercase one, so each room has one address.
-async fn game_page(Path(code): Path<String>, RawQuery(query): RawQuery) -> Response {
+/// asks `/api/rooms/{code}` for that).
+async fn game_page(Path(code): Path<String>) -> Response {
     match RoomCode::parse(&code) {
         None => StatusCode::NOT_FOUND.into_response(),
-        Some(parsed) if parsed.as_str() != code => redirect_to_room(&parsed, query),
         Some(_) => index_html(),
     }
 }
@@ -101,7 +99,7 @@ async fn game_page_with_slash(Path(code): Path<String>, RawQuery(query): RawQuer
     }
 }
 
-/// `POST /api/rooms`: opens a room. `201 {"code": "XYZ234"}`, or
+/// `POST /api/rooms`: opens a room. `201 {"code": "482193"}`, or
 /// `503 {"error": "TooManyRooms"}` when the server is full.
 async fn create_room(State(registry): State<Arc<Registry>>) -> Response {
     match registry.create() {
@@ -114,8 +112,7 @@ async fn create_room(State(registry): State<Arc<Registry>>) -> Response {
     }
 }
 
-/// `GET /api/rooms/{code}`: `200 {}` if the room is open, else `404`. The
-/// code is parsed like user input, so a lowercase code works too.
+/// `GET /api/rooms/{code}`: `200 {}` if the room is open, else `404`.
 async fn room_exists(Path(code): Path<String>, State(registry): State<Arc<Registry>>) -> Response {
     let open = RoomCode::parse(&code).is_some_and(|code| registry.get(&code).is_some());
     if open {
@@ -275,7 +272,8 @@ mod tests {
         // The page is served whether or not the room exists: the client asks
         // `/api/rooms/{code}` for that.
         let code = create_room(addr).await;
-        for path in [format!("/{code}"), "/ZZZZZZ".to_string()] {
+        assert_ne!(code, "000000");
+        for path in [format!("/{code}"), "/000000".to_string()] {
             let response = http_get(addr, &path).await;
             assert_eq!(status(&response), 200, "{path}: {response}");
             let content_type = header(&response, "content-type").unwrap();
@@ -286,40 +284,43 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_lowercase_code_redirects_to_uppercase() {
+    async fn a_code_page_with_a_query_is_served_as_is() {
         let addr = spawn_server().await;
-        let response = http_get(addr, "/xyZ234").await;
-        assert_eq!(status(&response), 307, "{response}");
-        assert_eq!(header(&response, "location"), Some("/XYZ234"));
-
-        // The query string survives, so `?name=` links keep working.
-        let response = http_get(addr, "/xyz234?name=Cara&debug=1").await;
-        assert_eq!(status(&response), 307, "{response}");
-        assert_eq!(
-            header(&response, "location"),
-            Some("/XYZ234?name=Cara&debug=1")
-        );
+        // `?name=` links load the page directly, with no redirect.
+        let response = http_get(addr, "/482193?name=Cara&debug=1").await;
+        assert_eq!(status(&response), 200, "{response}");
+        assert!(response.ends_with(include_str!("../../client/index.html")));
     }
 
     #[tokio::test]
     async fn a_trailing_slash_redirects_to_the_code() {
         let addr = spawn_server().await;
-        for path in ["/XYZ234/", "/xyz234/"] {
-            let response = http_get(addr, path).await;
-            assert_eq!(status(&response), 307, "{path}: {response}");
-            assert_eq!(header(&response, "location"), Some("/XYZ234"));
-        }
-        let response = http_get(addr, "/XYZ234/?name=Cara").await;
-        assert_eq!(header(&response, "location"), Some("/XYZ234?name=Cara"));
+        let response = http_get(addr, "/482193/").await;
+        assert_eq!(status(&response), 307, "{response}");
+        assert_eq!(header(&response, "location"), Some("/482193"));
+        // The query string survives, so `?name=` links keep working.
+        let response = http_get(addr, "/012345/?name=Cara&debug=1").await;
+        assert_eq!(status(&response), 307, "{response}");
+        assert_eq!(
+            header(&response, "location"),
+            Some("/012345?name=Cara&debug=1")
+        );
     }
 
     #[tokio::test]
     async fn a_path_that_is_not_a_code_is_a_404() {
         let addr = spawn_server().await;
         for path in [
-            "/XYZ23",
-            "/XYZ2345",
-            "/XYZ230",
+            "/48219",
+            "/4821930",
+            "/48219a",
+            "/ABCDEF",
+            "/482%20193",
+            "/%20482193",
+            "/482-19",
+            "/%D9%A1%D9%A2%D9%A3%D9%A4%D9%A5%D9%A6", // ١٢٣٤٥٦
+            "/style.css.map",
+            "/48219a/",
             "/hello",
             "/favicon.ico",
             "/nope/",
@@ -371,16 +372,12 @@ mod tests {
         let response = http_get(addr, &format!("/api/rooms/{code}")).await;
         assert_eq!(status(&response), 200, "{response}");
         assert_eq!(json_body(&response), json!({}));
-        // The code is parsed like user input there.
-        let lower = code.to_lowercase();
-        let response = http_get(addr, &format!("/api/rooms/{lower}")).await;
-        assert_eq!(status(&response), 200, "{response}");
     }
 
     #[tokio::test]
     async fn get_api_rooms_for_an_unknown_code_is_a_404() {
         let addr = spawn_server().await;
-        for code in ["ZZZZZZ", "not-a-code"] {
+        for code in ["482193", "48219", "not-a-code"] {
             let response = http_get(addr, &format!("/api/rooms/{code}")).await;
             assert_eq!(status(&response), 404, "{code}: {response}");
         }
@@ -400,7 +397,7 @@ mod tests {
     async fn ws_for_an_unknown_code_is_a_404() {
         let addr = spawn_server().await;
         // Plain GETs: the code is checked before the upgrade.
-        for path in ["/ZZZZZZ/ws", "/not-a-code/ws"] {
+        for path in ["/482193/ws", "/48219/ws", "/not-a-code/ws"] {
             let response = http_get(addr, path).await;
             assert_eq!(status(&response), 404, "{path}: {response}");
         }

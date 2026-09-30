@@ -25,21 +25,24 @@ pub struct PlayPhase {
     /// Seats that have gone out, in order.
     pub(crate) finish_order: Vec<SeatId>,
     pub(crate) deal_start: DealStart,
-    /// What the most recent play changed, so its player can take it back
-    /// (GAME_RULES.md house rule #10). `None` once anyone has acted since,
-    /// and never set by a play that ended the deal.
+    /// What the most recent play or pass changed, so its player can take it
+    /// back (GAME_RULES.md house rule #10). Replaced by the next play or
+    /// pass, so it only ever holds one step; `None` after a take back and
+    /// after a play that ended the deal.
     pub(crate) undo: Option<Box<UndoPoint>>,
-    /// The seat whose play was just taken back, so every client can say so.
-    /// Cleared by the next play or pass.
+    /// The seat whose play or pass was just taken back, so every client can
+    /// say so. Cleared by the next play or pass.
     pub(crate) took_back: Option<SeatId>,
 }
 
-/// Everything a `play` changes, as it was just before the play.
+/// Everything a `play` or `pass` changes, as it was just before it. (A pass
+/// leaves the hand and finish order alone, but keeping them makes restoring
+/// the same for both.)
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UndoPoint {
-    /// Who played: the only seat that may take it back.
+    /// Who acted: the only seat that may take it back.
     pub(crate) seat: SeatId,
-    /// That seat's hand before the play.
+    /// That seat's hand before the action.
     pub(crate) hand: PlayerHand,
     pub(crate) trick: Trick,
     pub(crate) turn: SeatId,
@@ -141,14 +144,7 @@ impl PlayPhase {
 
         // 6: commit. `contains_all` passed above, so this can't fail. First
         // note what the play is about to change, so it can be taken back.
-        let undo = UndoPoint {
-            seat,
-            hand: self.hands[seat.index()].clone(),
-            trick: self.trick.clone(),
-            turn: self.turn,
-            finish_order: self.finish_order.clone(),
-            last_trick: self.last_trick.clone(),
-        };
+        let undo = self.undo_point(seat);
         self.hands[seat.index()]
             .remove_all(cards)
             .expect("contains_all was checked above");
@@ -171,10 +167,10 @@ impl PlayPhase {
         Ok(PlayOutcome::Continues)
     }
 
-    /// `seat` takes back the play it just made (GAME_RULES.md house rule
-    /// #10): everything that play changed goes back to how it was, and it's
-    /// `seat`'s turn again. Only one step back, and only until someone else
-    /// acts.
+    /// `seat` takes back the play or pass it just made (GAME_RULES.md house
+    /// rule #10): everything it changed goes back to how it was, and it's
+    /// `seat`'s turn again. A pass that ended the trick reopens it. Only one
+    /// step back, and only until someone else acts.
     pub fn take_back(&mut self, seat: SeatId) -> Result<PlayOutcome, ActionError> {
         if !self.can_take_back(seat) {
             return Err(ActionError::NothingToTakeBack);
@@ -189,9 +185,22 @@ impl PlayPhase {
         Ok(PlayOutcome::Continues)
     }
 
-    /// Whether `seat` made the most recent play and nobody has acted since.
+    /// Whether `seat` made the most recent play or pass (and hasn't already
+    /// taken it back). Anyone else acting since replaces the undo point.
     pub(crate) fn can_take_back(&self, seat: SeatId) -> bool {
         self.undo.as_ref().is_some_and(|undo| undo.seat == seat)
+    }
+
+    /// A snapshot of everything a play or pass by `seat` may change.
+    fn undo_point(&self, seat: SeatId) -> UndoPoint {
+        UndoPoint {
+            seat,
+            hand: self.hands[seat.index()].clone(),
+            trick: self.trick.clone(),
+            turn: self.turn,
+            finish_order: self.finish_order.clone(),
+            last_trick: self.last_trick.clone(),
+        }
     }
 
     /// `seat` passes. Follows TECH_SPEC.md §3.8; a pass never ends the deal.
@@ -204,11 +213,11 @@ impl PlayPhase {
             return Err(ActionError::CannotPassWhenLeading);
         };
 
-        // 2. A pass means someone has acted since the last play, so that
-        // play can no longer be taken back. (This also covers trick end,
-        // which only a pass can cause.)
+        // 2. Note what the pass is about to change, so it can be taken back.
+        // This replaces the previous action's undo point: someone has acted
+        // since. (A pass that ends the trick clears it again below.)
+        self.undo = Some(Box::new(self.undo_point(seat)));
         self.trick.record_pass(seat);
-        self.undo = None;
         self.took_back = None;
 
         // 3: the trick is over once every other active player has passed
@@ -233,6 +242,9 @@ impl PlayPhase {
                 );
                 winner.partner()
             };
+            // A finished trick stays finished: the pass that ended it can't
+            // be taken back (user decision, GAME_RULES house rule #10).
+            self.undo = None;
             let finished = std::mem::take(&mut self.trick);
             self.last_trick = Some(CompletedTrick {
                 entries: finished.entries,
@@ -825,13 +837,14 @@ mod tests {
         );
         assert!(p.can_take_back(seat(0)));
 
-        // The next player passed.
+        // The next player passed (and may take that pass back instead).
         p.pass(seat(1)).unwrap();
         assert_rejected(
             &mut p,
             |p| p.take_back(seat(0)),
             ActionError::NothingToTakeBack,
         );
+        assert!(p.can_take_back(seat(1)));
 
         // The next player played.
         let mut p = phase(HANDS, 0);
@@ -876,6 +889,136 @@ mod tests {
         // has nothing more to take back.
         assert_eq!(p.take_back(seat(0)), Err(ActionError::NothingToTakeBack));
         assert_eq!(p.take_back(seat(1)), Err(ActionError::NothingToTakeBack));
+    }
+
+    // --- Taking back a pass (also house rule #10) --------------------------
+
+    #[test]
+    fn take_back_a_mid_trick_pass() {
+        let mut p = phase(HANDS, 0);
+        play(&mut p, 0, "9S").unwrap();
+        let before = p.clone();
+        p.pass(seat(1)).unwrap();
+        assert!(p.can_take_back(seat(1)));
+
+        assert_eq!(p.take_back(seat(1)), Ok(PlayOutcome::Continues));
+        assert_eq!(p, taken_back(&before, seat(1)));
+        // Spelled out: the passed flags, trick entries and turn.
+        assert_eq!(p.trick.passed, [false; 4]);
+        assert_eq!(p.trick.entries, vec![played(0, "9S", single(Rank::Nine))]);
+        assert_eq!(p.turn, seat(1));
+        assert_eq!(p.hands[1], hand("3S 7S 7D"));
+    }
+
+    /// A pass that ended the trick can't be taken back: the trick stays
+    /// finished (user decision), whether or not it handed on the lead by 接风.
+    #[test]
+    fn a_trick_ending_pass_cannot_be_taken_back() {
+        let mut p = phase(HANDS, 0);
+        play(&mut p, 0, "5S").unwrap();
+        play(&mut p, 1, "7S").unwrap();
+        play(&mut p, 2, "KS").unwrap();
+        p.pass(seat(3)).unwrap();
+        p.pass(seat(0)).unwrap();
+        p.pass(seat(1)).unwrap();
+        assert_eq!(p.trick, Trick::new(), "seat 1's pass ended the trick");
+        assert!(!p.can_take_back(seat(1)));
+        assert_rejected(
+            &mut p,
+            |p| p.take_back(seat(1)),
+            ActionError::NothingToTakeBack,
+        );
+
+        let mut p = phase(["AS", "3S 5S", "4S 6S", "7S 8S"], 0);
+        play(&mut p, 0, "AS").unwrap();
+        p.pass(seat(1)).unwrap();
+        p.pass(seat(2)).unwrap();
+        p.pass(seat(3)).unwrap();
+        assert_eq!(p.last_trick.as_ref().unwrap().next_leader, seat(2));
+        assert_rejected(
+            &mut p,
+            |p| p.take_back(seat(3)),
+            ActionError::NothingToTakeBack,
+        );
+    }
+
+    #[test]
+    fn after_taking_back_a_pass_the_player_can_play_instead() {
+        let mut p = phase(HANDS, 0);
+        play(&mut p, 0, "5S").unwrap();
+        p.pass(seat(1)).unwrap();
+        p.take_back(seat(1)).unwrap();
+
+        assert_eq!(play(&mut p, 1, "7S"), Ok(PlayOutcome::Continues));
+        assert_eq!(
+            p.trick.entries,
+            vec![
+                played(0, "5S", single(Rank::Five)),
+                played(1, "7S", single(Rank::Seven)),
+            ]
+        );
+        assert_eq!(p.trick.passed, [false; 4]);
+        assert_eq!(p.turn, seat(2));
+        assert_eq!(p.took_back, None, "a play clears the notice");
+        assert!(p.can_take_back(seat(1)));
+    }
+
+    #[test]
+    fn nothing_to_take_back_after_a_pass() {
+        let mut p = phase(HANDS, 0);
+        play(&mut p, 0, "5S").unwrap();
+        p.pass(seat(1)).unwrap();
+        // Only the passer may take it back; seat 0's play is behind it.
+        for s in [0, 2, 3] {
+            assert_rejected(
+                &mut p,
+                |p| p.take_back(seat(s)),
+                ActionError::NothingToTakeBack,
+            );
+        }
+
+        // The next player played.
+        let mut after_play = p.clone();
+        play(&mut after_play, 2, "8S").unwrap();
+        assert_rejected(
+            &mut after_play,
+            |p| p.take_back(seat(1)),
+            ActionError::NothingToTakeBack,
+        );
+
+        // The next player passed too: only that pass can be taken back.
+        p.pass(seat(2)).unwrap();
+        assert_rejected(
+            &mut p,
+            |p| p.take_back(seat(1)),
+            ActionError::NothingToTakeBack,
+        );
+        assert!(p.can_take_back(seat(2)));
+
+        // A trick-ending pass, then the new leader leads.
+        p.pass(seat(3)).unwrap();
+        assert!(p.last_trick.is_some());
+        play(&mut p, 0, "9S").unwrap();
+        assert_rejected(
+            &mut p,
+            |p| p.take_back(seat(3)),
+            ActionError::NothingToTakeBack,
+        );
+    }
+
+    #[test]
+    fn only_one_step_back_over_passes() {
+        let mut p = phase(HANDS, 0);
+        play(&mut p, 0, "5S").unwrap();
+        p.pass(seat(1)).unwrap();
+        let before = p.clone();
+        p.pass(seat(2)).unwrap();
+        p.take_back(seat(2)).unwrap();
+        assert_eq!(p, taken_back(&before, seat(2)));
+        // Seat 1's pass stays, and seat 2 has nothing more to take back.
+        assert_eq!(p.take_back(seat(1)), Err(ActionError::NothingToTakeBack));
+        assert_eq!(p.take_back(seat(2)), Err(ActionError::NothingToTakeBack));
+        assert_eq!(p.trick.passed, [false, true, false, false]);
     }
 
     // --- Ambiguous plays (step 5 with several readings) --------------------

@@ -92,7 +92,7 @@ export function renderLobby() {
 
 // ---------- invite line (LOBBY_FLOW_SPEC §6.3) ----------
 
-// "Invite: XYZ234 [Copy link]". No code (fixture mode without ?code=) → nothing.
+// "Invite: 482193 [Copy link]". No code (fixture mode without ?code=) → nothing.
 function renderInvite() {
   const code = store.roomCode;
   if (!code) return null;
@@ -299,13 +299,15 @@ function renderSettings(lobby) {
   });
 
   return el("section", { class: "lobby-settings", "aria-label": t("lobby.settingsAria") },
-    el("div", { class: "settings-head" },
+    // The same header band as the Last deal card (results.js).
+    el("header", { class: "sec-band" },
       el("h2", {}, t("lobby.settings")),
-      el("span", { class: "muted" }, t("lobby.settingsNote"))),
-    teamRow("A"),
-    teamRow("B"),
-    el("div", { class: "settings-declaring", role: "radiogroup", "aria-label": t("lobby.declaringAria") },
-      el("strong", { class: "settings-team-name" }, t("lobby.declaring")), radios));
+      el("span", { class: "sec-band-note" }, t("lobby.settingsNote"))),
+    el("div", { class: "settings-body" },
+      teamRow("A"),
+      teamRow("B"),
+      el("div", { class: "settings-declaring", role: "radiogroup", "aria-label": t("lobby.declaringAria") },
+        el("strong", { class: "settings-team-name" }, t("lobby.declaring")), radios)));
 }
 
 // ---------- New match (LOBBY_FLOW_SPEC §6.3) ----------

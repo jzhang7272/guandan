@@ -1646,6 +1646,72 @@ mod tests {
         h.finish().await;
     }
 
+    /// A mid-trick pass is taken back and everyone sees it; a pass that
+    /// ended the trick can't be (the trick stays finished).
+    #[tokio::test(start_paused = true)]
+    async fn a_pass_take_back_is_broadcast() {
+        let mut h = Harness::start_with(in_deal_room(almost_over(Rank::Five)));
+        let (mut clients, _tokens) = h.join_all().await;
+
+        // Seat 0 goes out on 3♠; seat 1 passes, then takes it back.
+        h.send(&clients[0], play("3S"));
+        h.send(&clients[1], ClientMessage::Pass);
+        settle().await;
+        for client in clients.iter_mut() {
+            client.drain();
+        }
+        h.send(&clients[1], ClientMessage::TakeBack);
+        settle().await;
+        for (i, client) in clients.iter_mut().enumerate() {
+            let messages = client.drain();
+            let [ServerMessage::State(state)] = messages.as_slice() else {
+                panic!("seat {i}: expected one State, got {messages:?}");
+            };
+            let PhaseView::Playing {
+                turn,
+                trick,
+                took_back,
+                ..
+            } = &match_view(state).phase
+            else {
+                panic!("expected Playing");
+            };
+            assert_eq!(*turn, seat(1));
+            assert_eq!(trick.len(), 1, "only seat 0's play is left");
+            assert_eq!(*took_back, Some(seat(1)));
+        }
+
+        // Now all three pass; seat 3's pass ends the trick (接风 to seat 2)
+        // and can't be taken back.
+        h.send(&clients[1], ClientMessage::Pass);
+        h.send(&clients[2], ClientMessage::Pass);
+        h.send(&clients[3], ClientMessage::Pass);
+        settle().await;
+        for client in clients.iter_mut() {
+            client.drain();
+        }
+        h.send(&clients[3], ClientMessage::TakeBack);
+        settle().await;
+        let messages = clients[3].drain();
+        assert!(
+            matches!(
+                messages.as_slice(),
+                [ServerMessage::Rejected {
+                    code: RejectCode::Action(ActionError::NothingToTakeBack),
+                    ..
+                }]
+            ),
+            "got {messages:?}"
+        );
+        for client in &mut clients[..3] {
+            assert!(
+                client.drain().is_empty(),
+                "a rejection goes only to the sender"
+            );
+        }
+        h.finish().await;
+    }
+
     /// Playing at level Six (team A declares), so 6♥ is the wildcard. The
     /// losers hold both Big Jokers (抗贡), so seat 0 leads straight away.
     fn wildcard_match() -> Match {

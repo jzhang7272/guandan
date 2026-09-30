@@ -20,7 +20,7 @@ pub enum ClientMessage {
         declared: Option<Combo>,
     },
     Pass,
-    /// Take back your own play while nobody has acted since
+    /// Take back your own play or pass while nobody has acted since
     /// (GAME_PAGE_V3_SPEC.md §1). Broadcast as a State, or `Rejected` with
     /// `NothingToTakeBack`.
     TakeBack,
@@ -103,33 +103,33 @@ pub enum RejectCode {
 /// and never in `rules/`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, thiserror::Error)]
 pub enum SessionError {
-    #[error("join the room first")]
+    #[error("Join the room first")]
     NotJoined,
-    #[error("you have already joined")]
+    #[error("You have already joined")]
     AlreadyJoined,
     /// Empty after trimming, or longer than 20 chars.
-    #[error("names must be 1 to 20 characters")]
+    #[error("Names must be 1 to 20 characters")]
     InvalidName,
     /// A *connected* seat already uses this name.
-    #[error("that name is already taken by a connected player")]
+    #[error("That name is already taken by a connected player")]
     NameTaken,
-    #[error("all seats are taken")]
+    #[error("All seats are taken")]
     NoSeatsAvailable,
     /// A game action (Play, Pass, …) or ResetDeal while in the lobby.
-    #[error("there is no deal in progress")]
+    #[error("There is no deal in progress")]
     NotInDeal,
     /// SetReady / ChooseSeat / UpdateSettings / NewMatch during a deal.
-    #[error("that can only be done in the lobby")]
+    #[error("That can only be done in the lobby")]
     NotInLobby,
     /// ChooseSeat to an occupied seat.
-    #[error("that seat is taken")]
+    #[error("That seat is taken")]
     SeatTaken,
     /// ChooseSeat between the deals of a match (tribute depends on who
     /// finished where, so seats can't change).
-    #[error("seats are locked during a match; start a new match to change seats")]
+    #[error("Seats are locked during a match; start a new match to change seats")]
     SeatsLocked,
     /// UpdateSettings with no declaring team once a deal has been played.
-    #[error("once a deal has been played, a team must be declaring")]
+    #[error("Once a deal has been played, a team must be declaring")]
     InvalidSettings,
 }
 
@@ -181,7 +181,7 @@ mod tests {
 
     #[test]
     fn session_error_messages_and_codes() {
-        assert_eq!(SessionError::NotJoined.to_string(), "join the room first");
+        assert_eq!(SessionError::NotJoined.to_string(), "Join the room first");
         assert_eq!(
             serde_json::to_string(&SessionError::NameTaken).unwrap(),
             r#""NameTaken""#
@@ -215,7 +215,7 @@ mod tests {
         };
         assert_eq!(
             serde_json::to_value(&message).unwrap(),
-            json!({"type": "Rejected", "code": "NotYourTurn", "message": "it is not your turn"})
+            json!({"type": "Rejected", "code": "NotYourTurn", "message": "It is not your turn"})
         );
     }
 

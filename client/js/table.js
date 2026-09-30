@@ -93,7 +93,7 @@ function bestEntry(entries) {
 
 // One team's side of the ribbon: its name (outside) and a small box with its
 // level (next to the pennant). The declaring team's box is filled with the
-// team color and gets a ★; "A-tries n/3" sits under the box of a team at A.
+// team color and gets a ★; "Attempts: n/3" sits under the box of a team at A.
 // `side` is "mine" (left) or "theirs" (right; box first, then the name).
 // On phones the name is the short label relative to you (Us / Them), so the
 // "(your team)" note is shown on wide screens only.
@@ -113,7 +113,11 @@ function ribbonSide(g, team, side, yourTeam) {
   const box = el("span", { class: "rb-box-wrap" },
     el("span", { class: `rb-box${declaring ? " is-declaring" : ""}` },
       lv, declaring ? el("span", { class: "rb-star", "aria-hidden": "true" }, "★") : null),
-    tries ? el("span", { class: "rb-tries" }, tries) : null);
+    // Phones show just "1/3": the full "Attempts: 1/3" would squeeze the
+    // Us / Them name (the whole label is still the side's hover / aria).
+    tries ? el("span", { class: "rb-tries" },
+      el("span", { class: "long" }, tries),
+      el("span", { class: "short" }, `${triesN}/3`)) : null);
 
   return el("div", {
     class: `rb-side rb-${side} team-${team.toLowerCase()}`,

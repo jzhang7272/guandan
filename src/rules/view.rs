@@ -139,10 +139,10 @@ pub enum PhaseView {
         finish_order: Vec<SeatId>,
         /// Public: tribute/return cards are shown to all.
         deal_start: DealStart,
-        /// True only for the viewer who may take back their play right now
+        /// True only for the viewer who may take back their play or pass right now
         /// (GAME_RULES.md house rule #10), so the client needs no rule logic.
         can_take_back: bool,
-        /// The seat whose play was just taken back (the same for everyone),
+        /// The seat whose play or pass was just taken back (the same for everyone),
         /// until the next play or pass.
         took_back: Option<SeatId>,
     },
@@ -380,6 +380,47 @@ mod tests {
             assert_eq!(
                 take_back_fields(&m, viewer),
                 (false, Some(leader)),
+                "viewer {viewer}"
+            );
+        }
+    }
+
+    /// A pass can be taken back too (house rule #10): only the passer is
+    /// offered it, and the player whose play it followed no longer is.
+    #[test]
+    fn only_the_player_who_just_passed_can_take_back() {
+        let leader = seat(1);
+        let mut m = Match {
+            progress: progress(),
+            state: GameState::Playing(PlayPhase::new(
+                ["3S 5S", "4S 6S", "7S 8S", "9S TS"].map(hand),
+                Level(Rank::Ace),
+                leader,
+                DealStart::AntiTribute { leader },
+            )),
+        };
+        let GameState::Playing(p) = &mut m.state else {
+            unreachable!()
+        };
+        p.play(leader, &cards("6S"), None).unwrap();
+        p.pass(seat(2)).unwrap();
+
+        for viewer in 0..4 {
+            assert_eq!(
+                take_back_fields(&m, viewer),
+                (viewer == 2, None),
+                "viewer {viewer}"
+            );
+        }
+
+        let GameState::Playing(p) = &mut m.state else {
+            unreachable!()
+        };
+        p.take_back(seat(2)).unwrap();
+        for viewer in 0..4 {
+            assert_eq!(
+                take_back_fields(&m, viewer),
+                (false, Some(seat(2))),
                 "viewer {viewer}"
             );
         }

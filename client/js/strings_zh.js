@@ -7,7 +7,7 @@ export const ZH = {
   "common.cancel": "取消",
   "common.listSep": "、", // i18n.js list(): "a、b和c"
   "common.listLast": "和",
-  "common.aTries": ({ n }) => `打A ${n}/3`,
+  "common.aTries": ({ n }) => `打A：${n}/3`,
 
   // ---------- language toggle (main.js); the same in both languages ----------
   "lang.groupAria": "Language / 语言",
@@ -30,12 +30,12 @@ export const ZH = {
   "home.creating": "创建中……",
   "home.or": "或",
   "home.inviteCode": "邀请码",
-  "home.codePlaceholder": "XYZ234",
+  "home.codePlaceholder": "482193",
   "home.joinGame": "加入牌局",
   "home.errNameFirst": "请先输入你的名字。",
   "home.errCodeMissing": "请输入你收到的邀请码。",
   "home.errCodeInvalid": ({ typed, length }) =>
-    `“${typed}”不是有效的邀请码：邀请码由 ${length} 位字母和数字组成，例如 XYZ234。`,
+    `“${typed}”不是有效的邀请码：邀请码由 ${length} 位数字组成，例如 482193。`,
   "home.errServerFull": "服务器已满（牌局太多），请几分钟后再试。",
   "home.errCreateFailed": "无法创建牌局，服务器是否在运行？请重试。",
 
@@ -95,22 +95,20 @@ export const ZH = {
   // ---------- results.js: Last deal card / match-won banner ----------
   "results.lastDeal": "上一局",
   "results.matchWonAria": "比赛获胜",
-  "results.matchWon": ({ team }) => `🏆 ${team}赢得比赛！级数已回到2。`,
-  "results.wins": ({ team, finish }) => `${team}获胜（${finish === "1-2" ? "1-2，双下" : finish}）`,
-  "results.finalDeal": ({ headline }) => `决胜局 — ${headline}`,
+  "results.matchWon": ({ team }) => `🏆 ${team}赢得比赛！`,
+  "results.levelsBack": "级数已回到2。",
+  "results.played": ({ name }) => `${name} 出牌：`,
+  "results.wins": ({ team }) => `${team}获胜！`,
+  "results.finish": ({ finish }) => (finish === "1-2" ? "1-2 双下" : finish),
   "results.place": ({ name, place }) => `${name} ${place}`,
   "results.places": ({ places }) => places.join("，"),
-  "results.placesParen": ({ places }) => `（${places}）`,
-  "results.level": ({ team, from, to }) => `${team}：${from} → ${to}`,
-  "results.levelYours": ({ team, from, to }) => `${team}（我方）：${from} → ${to}`,
-  "results.droppedToTwo": ({ team }) => `${team}三次打A不过，退回2。`,
-  "results.aAttemptFailed": ({ team, n }) => `${team}：第${n}次打A失败（共3次）`,
+  "results.yourTeam": "（我方）",
 
   // ---------- table.js: header ribbon, pennant, Redeal ----------
   "table.yourTeam": "（我方）",
   "table.sideAria": ({ team, mine, level, declaring, tries }) =>
     `${team}${mine ? "（我方）" : ""}：${level}级`
-    + `${declaring ? "，主打" : ""}${tries !== null && tries !== undefined ? `，打A ${tries}/3` : ""}`,
+    + `${declaring ? "，主打" : ""}${tries !== null && tries !== undefined ? `，打A：${tries}/3` : ""}`,
   "table.pennantLabel": "打",
   "table.pennantTitle": ({ level }) => `本局打${level}`,
   "table.pennantAria": ({ level }) => `本局级牌 ${level}`,
@@ -130,8 +128,8 @@ export const ZH = {
   // ---------- table.js: felt ----------
   "table.passCard": "过",
   "table.pass": "过",
-  "table.leads": ({ name }) => `${name} 领出`,
-  "table.jiefeng": ({ a, b }) => `接风 — ${a} 已出完，对家 ${b} 领出`,
+  "table.leads": ({ name }) => `${name} 出牌`,
+  "table.jiefeng": ({ a, b }) => `接风 — ${a} 已出完，对家 ${b} 出牌`,
   "table.tributeBeforeDeal": "开局前进贡",
 
   // ---------- play.js: action bar, reading picker ----------
@@ -142,7 +140,7 @@ export const ZH = {
   "play.selected": ({ n }) => `已选 ${n} 张`,
   "play.clear": "重选",
   "play.takeBack": "悔牌",
-  "play.takeBackTitle": "撤回你刚出的牌",
+  "play.takeBackTitle": "撤回你的上一步（出牌或过）",
   "play.pass": "过",
   "play.play": "出牌",
   "reading.title": "你想出哪种牌型？",
@@ -187,7 +185,8 @@ export const ZH = {
   "error.NotAValidCombo": "这些牌不是合法牌型",
   "error.DoesNotBeatCurrent": "你的牌管不上",
   "error.InvalidDeclaration": "这些牌不能按所选牌型打出",
-  "error.CannotPassWhenLeading": "领出时不能过",
+  "error.CannotPassWhenLeading": "首家出牌时不能过",
+  "error.withCards": ({ message, cards }) => `${message}：${cards}`,
   "error.NothingToTakeBack": "没有可以悔的牌",
   "error.NotATributePayer": "你不需要进贡",
   "error.AlreadyPaid": "你已经进贡过了",
@@ -256,12 +255,12 @@ export const ZH = {
 
   // ---------- format.js: dealStartLine, returnsLine ----------
   // deal.firstDeal / antiTribute / exchange / tribute aren't in
-  // TRANSLATION.md (nothing on screen uses dealStartLine now).
-  "deal.firstDeal": ({ card, name }) => `首局：翻出 ${card}，${name} 持有此牌并领出。`,
-  "deal.antiTribute": ({ name }) => `抗贡（双大王在手），不进贡。${name} 领出。`,
+  // TRANSLATION.md. On screen: only deal.antiTribute (net.js notice).
+  "deal.firstDeal": ({ card, name }) => `首局：翻出 ${card}，${name} 持有此牌并出牌。`,
+  "deal.antiTribute": ({ name }) => `抗贡：输方持有两张大王，不进贡。${name} 出牌。`,
   "deal.exchange": ({ payer, receiver, tribute, returned }) =>
     `${payer} 向 ${receiver} 进贡 ${tribute}，还贡 ${returned}`,
-  "deal.tribute": ({ exchanges, name }) => `${exchanges.join("；")}。${name} 领出。`,
+  "deal.tribute": ({ exchanges, name }) => `${exchanges.join("；")}。${name} 出牌。`,
   "deal.returnPart": ({ from, to, card }) => `${from} → ${to} ${card}`,
   "deal.returns": ({ parts }) => `还贡：${parts.join("，")}`,
 };

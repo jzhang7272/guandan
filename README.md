@@ -9,8 +9,8 @@ no separate frontend build, no external services.
   including wildcards (逢人配), the bomb hierarchy, 接风, level advancement,
   and the match-end condition (including "three failed attempts at A → back
   to 2").
-- Several games at once: create a game to get an invite code (like
-  `XYZ234`) and share the link `http://<host>/XYZ234` with your friends.
+- Several games at once: create a game to get a six-digit invite code (like
+  `482193`) and share the link `http://<host>/482193` with your friends.
 - A pre-game lobby where you pick seats (and so partners) and ready up.
 - English or Simplified Chinese (简体中文): the **EN | 中文** toggle in the
   top-left corner of every page switches instantly, using real 掼蛋 terms
@@ -37,7 +37,7 @@ Then open <http://localhost:8080> in a browser. It prints
 `serving on http://localhost:8080` when it's ready.
 
 One player creates a game on the home page and shares its invite link
-(`http://localhost:8080/XYZ234`, where `XYZ234` is the game's code). Everyone
+(`http://localhost:8080/482193`, where `482193` is the game's code). Everyone
 opens that link and enters a name, which takes the first free seat (**Sit
 here** moves you to another empty one), then clicks **I'm ready**. The match
 starts as soon as all four seats are ready. Partners sit opposite each other:
@@ -66,9 +66,9 @@ PORT=9000 ABANDON_AFTER_MINS=60 cargo run --release
 
 | Parameter | Example | What it does |
 |---|---|---|
-| `?name=` | `/XYZ234?name=Josey` | Join with this name without typing it in. |
-| `?lang=` | `/XYZ234?lang=zh` | Show this page load in `zh` (Chinese) or `en` (English), without changing the saved choice. Otherwise the page uses the language last picked with the toggle, or on a first visit the browser's language. |
-| `?debug=1` | `/XYZ234?debug=1` | Open the debug panel (raw game state and the last 20 messages). The **≡** button in the top-right corner toggles it too. |
+| `?name=` | `/482193?name=Josey` | Join with this name without typing it in. |
+| `?lang=` | `/482193?lang=zh` | Show this page load in `zh` (Chinese) or `en` (English), without changing the saved choice. Otherwise the page uses the language last picked with the toggle, or on a first visit the browser's language. |
+| `?debug=1` | `/482193?debug=1` | Open the debug panel (raw game state and the last 20 messages). The **≡** button in the top-right corner toggles it too. |
 
 ## Hosting for friends
 
@@ -100,14 +100,14 @@ player's name can take their seat, so it's meant for friends, not strangers.
 
 ## Playtesting alone (four tabs)
 
-Create a game at <http://localhost:8080> to get a code (say `XYZ234`), then
+Create a game at <http://localhost:8080> to get a code (say `482193`), then
 open four tabs, one per player:
 
 ```
-http://localhost:8080/XYZ234?name=A
-http://localhost:8080/XYZ234?name=B
-http://localhost:8080/XYZ234?name=C
-http://localhost:8080/XYZ234?name=D
+http://localhost:8080/482193?name=A
+http://localhost:8080/482193?name=B
+http://localhost:8080/482193?name=C
+http://localhost:8080/482193?name=D
 ```
 
 Click **I'm ready** in each. The tab whose turn it is (to play, or to pay or

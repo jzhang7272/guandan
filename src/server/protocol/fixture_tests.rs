@@ -1462,12 +1462,18 @@ fn visible_cards_are_consistent() {
                 ..
             } => {
                 assert!(!finish_order.contains(turn), "{name}: turn is out");
-                // Only the seat that made the trick's latest action (a play)
-                // can take it back; after a take back it's that seat's turn.
+                // Only the seat that made the trick's latest action (a play or
+                // a mid-trick pass) can take it back; after a take back it's
+                // that seat's turn. A trick-ending pass can't be taken back.
                 if *can_take_back {
+                    let viewers = matches!(
+                        trick.last(),
+                        Some(TrickEntry::Played { seat, .. } | TrickEntry::Passed { seat })
+                            if *seat == s.your_seat
+                    );
                     assert!(
-                        matches!(trick.last(), Some(TrickEntry::Played { seat, .. }) if *seat == s.your_seat),
-                        "{name}: can_take_back without a play of the viewer's last"
+                        viewers,
+                        "{name}: can_take_back but the latest action isn't the viewer's"
                     );
                 }
                 if let Some(taker) = took_back {

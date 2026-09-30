@@ -10,38 +10,38 @@ use serde::{Deserialize, Serialize};
 /// `Ok(NeedsDeclaration)` outcome, since the player did nothing wrong.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, thiserror::Error)]
 pub enum ActionError {
-    #[error("that action isn't allowed right now")]
+    #[error("That action isn't allowed right now")]
     WrongPhase,
-    #[error("it is not your turn")]
+    #[error("It is not your turn")]
     NotYourTurn,
-    #[error("those cards are not in your hand")]
+    #[error("Those cards are not in your hand")]
     CardsNotInHand,
-    #[error("those cards don't form a valid combination")]
+    #[error("Those cards don't form a valid combination")]
     NotAValidCombo,
-    #[error("that play doesn't beat the current play")]
+    #[error("That play doesn't beat the current play")]
     DoesNotBeatCurrent,
-    #[error("those cards can't be played as the declared combination")]
+    #[error("Those cards can't be played as the declared combination")]
     InvalidDeclaration,
-    #[error("you can't pass when you are leading")]
+    #[error("You can't pass when you are leading")]
     CannotPassWhenLeading,
     /// TakeBack with no play of this seat's to undo: nobody has played, the
     /// last play was someone else's, someone has acted since, or it ended
     /// the deal (GAME_RULES.md house rule #10).
-    #[error("there's no play of yours to take back")]
+    #[error("There's nothing of yours to take back")]
     NothingToTakeBack,
-    #[error("you don't owe a tribute")]
+    #[error("You don't owe a tribute")]
     NotATributePayer,
-    #[error("you have already paid your tribute")]
+    #[error("You have already paid your tribute")]
     AlreadyPaid,
-    #[error("that card can't be paid as tribute")]
+    #[error("That card can't be paid as tribute")]
     InvalidTributeCard,
-    #[error("you aren't receiving a tribute")]
+    #[error("You aren't receiving a tribute")]
     NotATributeReceiver,
-    #[error("wait until every tribute has been paid")]
+    #[error("Wait until every tribute has been paid")]
     TributeNotComplete,
-    #[error("you have already returned a card")]
+    #[error("You have already returned a card")]
     AlreadyReturned,
-    #[error("that card can't be returned")]
+    #[error("That card can't be returned")]
     InvalidReturnCard,
 }
 
@@ -52,7 +52,7 @@ mod tests {
     #[test]
     fn not_your_turn_message_matches_the_wire_example() {
         // TECH_SPEC.md §4 "Rejected" example.
-        assert_eq!(ActionError::NotYourTurn.to_string(), "it is not your turn");
+        assert_eq!(ActionError::NotYourTurn.to_string(), "It is not your turn");
     }
 
     #[test]

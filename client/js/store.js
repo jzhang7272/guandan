@@ -35,7 +35,7 @@ export const store = {
 
   // Rooms and invite codes (LOBBY_FLOW_SPEC §6.1), set by net.js from the path.
   page: null,              // "home" | "room" (fixture mode: "room")
-  roomCode: null,          // "XYZ234" on a room page (fixture mode: ?code=, else null)
+  roomCode: null,          // "482193" on a room page (fixture mode: ?code=, else null)
   roomStatus: null,        // "checking" | "open" | "missing" (no such game) | "ended" (room closed)
 
   // Home (home.js local UI state, LOBBY_FLOW_SPEC §6.2).

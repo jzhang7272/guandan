@@ -23,7 +23,7 @@
   <h1>Client tests</h1>
   <p class="muted">Serve the repo root (<code>python3 -m http.server 8000</code>) and open
     <code>/client/tests.html</code>. Checks <code>js/format.js</code> (UI_SPEC §4),
-    <code>js/cards.js</code>, <code>js/hand.js</code> (HAND_LAYOUT_SPEC), <code>js/results.js</code> (last-deal lines), <code>js/home.js</code> (invite codes, routing), <code>js/i18n.js</code> with the EN / 中文 string tables (LANGUAGE_SPEC §6), and <code>comboLabel</code> on every Play in <code>fixtures/</code> in both languages.</p>
+    <code>js/cards.js</code>, <code>js/hand.js</code> (HAND_LAYOUT_SPEC), <code>js/results.js</code> (the Last deal card), <code>js/home.js</code> (invite codes, routing), <code>js/i18n.js</code> with the EN / 中文 string tables (LANGUAGE_SPEC §6), and <code>comboLabel</code> on every Play in <code>fixtures/</code> in both languages.</p>
   <div id="summary" class="running">Running…</div>
   <ol id="failures"></ol>
   <details open><summary>Info</summary><ul id="info"></ul></details>
@@ -46,7 +46,7 @@ import {
 } from "./js/hand.js";
 import { store } from "./js/store.js";
 import { lastDealSummary } from "./js/results.js";
-import { parseRoomCode, codeFromInput, routeFromPath, inviteLink, CODE_ALPHABET } from "./js/home.js";
+import { parseRoomCode, codeFromInput, routeFromPath, inviteLink, CODE_LENGTH } from "./js/home.js";
 
 // Every fixture in fixtures/ (see fixtures/README.md). All are scanned for
 // Plays and DealStarts; a missing file is reported as a failure — keep this
@@ -226,7 +226,7 @@ eq(seatName([{ display_name: null, connected: false }], 0), "Seat 0", "seatName 
 eq(dealStartLine({ FirstDeal: { revealed: S("Seven", "Club"), leader: 2 } }, SEATS),
   "First deal: 7♣ was turned up — Sam holds it and leads.", "dealStartLine FirstDeal");
 eq(dealStartLine({ AntiTribute: { leader: 1 } }, SEATS),
-  "Anti-tribute (both Big Jokers held) — no tribute. Alex leads.", "dealStartLine AntiTribute");
+  "Anti-tribute: the losing side holds both Big Jokers — no tribute. Alex leads.", "dealStartLine AntiTribute");
 eq(dealStartLine({ Tribute: { leader: 0, exchanges: [
   { payer: 0, receiver: 1, tribute: SJ, returned: S("Three", "Club") },
   { payer: 2, receiver: 3, tribute: S("Five", "Club"), returned: S("Four", "Diamond") },
@@ -287,7 +287,7 @@ eq(labels(HAND)[0], "5♦", "sortHand does not mutate its input");
 {
   const chip = cardChip(S("Five", "Heart"), "Five");
   ok(chip.classList.contains("chip-level") && chip.classList.contains("chip-wild"), "wildcard chip has level + wild classes");
-  eq(chip.getAttribute("title"), "wildcard", "wildcard chip tooltip");
+  eq(chip.getAttribute("title"), "Wildcard", "wildcard chip tooltip");
   eq(chip.textContent, "5♥♥", "wildcard chip text: corner rank + suit, then the center pip");
   ok(chip.querySelector(".chip-wild-dot") !== null, "wildcard chip has the gold dot");
   const lvl = cardChip(S("Five", "Spade"), "Five");
@@ -802,22 +802,18 @@ async function checkClassifiedFixture() {
 const T = "North-South";
 const STRING_SAMPLES = {
   "common.aTries": { n: 1 },
-  "main.lookingFor": { code: "XYZ234" },
+  "main.lookingFor": { code: "482193" },
   "main.joiningAs": { name: "Josey" },
   "home.errCodeInvalid": { typed: "abc", length: 6 },
-  "gone.noGame": { code: "XYZ234" },
+  "gone.noGame": { code: "482193" },
   "lobby.waitingMore": { n: 2 },
   "lobby.notReady": { names: ["foo", "qux"] },
   "results.matchWon": { team: T },
-  "results.wins": { team: T, finish: "1-2" },
-  "results.finalDeal": { headline: "Team North-South wins 1-2" },
+  "results.played": { name: "Robin" },
+  "results.wins": { team: T },
+  "results.finish": { finish: "1-2" },
   "results.place": { name: "Alex", place: "1st" },
   "results.places": { places: ["Alex 1st", "Sam 2nd"] },
-  "results.placesParen": { places: "Alex 1st, Sam 2nd" },
-  "results.level": { team: T, from: "6", to: "8" },
-  "results.levelYours": { team: T, from: "6", to: "8" },
-  "results.droppedToTwo": { team: T },
-  "results.aAttemptFailed": { team: T, n: 2 },
   "table.sideAria": { team: T, mine: true, level: "8", declaring: true, tries: 1 },
   "table.pennantTitle": { level: "5" },
   "table.pennantAria": { level: "5" },
@@ -851,6 +847,7 @@ const STRING_SAMPLES = {
   "deal.tribute": { exchanges: ["Josey paid Alex SJ, got back 3♣"], name: "Josey" },
   "deal.returnPart": { from: "Alex", to: "Josey", card: "3♣" },
   "deal.returns": { parts: ["Alex → Josey 3♣"] },
+  "error.withCards": { message: "That play doesn't beat the current play", cards: "9♠ 9♦" },
 };
 {
   const enKeys = Object.keys(EN).sort();
@@ -877,9 +874,9 @@ const STRING_SAMPLES = {
   eq(EN["table.sideAria"]({ team: "East-West", mine: false, level: "5", declaring: false, tries: null }),
     "Team East-West: level 5", "strings en: sideAria, not yours, not declaring, not at A");
   eq(ZH["table.sideAria"]({ team: "南北方", mine: true, level: "A", declaring: true, tries: 1 }),
-    "南北方（我方）：A级，主打，打A 1/3", "strings zh: sideAria");
-  eq([ZH["results.wins"]({ team: "东西方", finish: "1-2" }), ZH["results.wins"]({ team: "东西方", finish: "1-3" })],
-    ["东西方获胜（1-2，双下）", "东西方获胜（1-3）"], "strings zh: results.wins, 双下 for a 1-2");
+    "南北方（我方）：A级，主打，打A：1/3", "strings zh: sideAria");
+  eq([ZH["results.finish"]({ finish: "1-2" }), ZH["results.finish"]({ finish: "1-3" })],
+    ["1-2 双下", "1-3"], "strings zh: results.finish, 双下 for a 1-2");
   eq([EN["tribute.taskPay"]({ name: null }), ZH["tribute.taskPay"]({ name: null })],
     ["Your task: choose a card to pay as tribute.", "请选择一张牌进贡。"], "strings: taskPay without a name");
 }
@@ -993,51 +990,59 @@ async function checkFixturesZh() {
 
 // ---------- home.js: invite codes and routing (LOBBY_FLOW_SPEC §5.1, §6.1, §6.2) ----------
 {
-  eq(CODE_ALPHABET.length, 31, "code alphabet: 31 characters");
-  ok(!/[01OIL]/.test(CODE_ALPHABET), "code alphabet has no 0 O 1 I L");
-  eq(parseRoomCode("XYZ234"), "XYZ234", "parseRoomCode: valid code");
-  eq(parseRoomCode("xyz234"), "XYZ234", "parseRoomCode: lowercase → uppercase");
-  eq(parseRoomCode("  abc789 "), "ABC789", "parseRoomCode: trims");
-  eq(parseRoomCode("XYZ23"), null, "parseRoomCode: too short");
-  eq(parseRoomCode("XYZ2345"), null, "parseRoomCode: too long");
-  eq(["XYZ230", "XYZ23O", "XYZ231", "XYZ23I", "XYZ23L"].map(parseRoomCode), [null, null, null, null, null],
-    "parseRoomCode: 0 O 1 I L are not code characters");
-  eq(parseRoomCode("XY-234"), null, "parseRoomCode: punctuation");
+  eq(CODE_LENGTH, 6, "code length: 6");
+  eq(parseRoomCode("482193"), "482193", "parseRoomCode: valid code");
+  eq(parseRoomCode("012345"), "012345", "parseRoomCode: a leading zero stays (a string, not a number)");
+  eq(parseRoomCode("000000"), "000000", "parseRoomCode: all zeros");
+  eq(parseRoomCode("  482193 "), "482193", "parseRoomCode: trims");
+  eq(parseRoomCode("48219"), null, "parseRoomCode: 5 digits");
+  eq(parseRoomCode("4821930"), null, "parseRoomCode: 7 digits");
+  eq(["48219a", "ABCDEF", "XYZ234", "482 19", "482-19", "+48219", "style.css"].map(parseRoomCode),
+    [null, null, null, null, null, null, null], "parseRoomCode: letters, spaces, punctuation");
+  eq(["١٢٣٤٥٦", "４８２１９３"].map(parseRoomCode), [null, null], "parseRoomCode: only ASCII digits");
   eq([parseRoomCode(null), parseRoomCode(undefined), parseRoomCode("")], [null, null, null], "parseRoomCode: nothing");
 
-  eq(codeFromInput(" xyz234 "), "XYZ234", "codeFromInput: trims + uppercases");
-  eq(codeFromInput("xyz 234"), "XYZ234", "codeFromInput: drops spaces");
-  eq(codeFromInput("XYZ-234"), "XYZ234", "codeFromInput: drops dashes");
-  eq(codeFromInput("http://192.168.1.5:8080/xyz234"), "XYZ234", "codeFromInput: a pasted invite link");
-  eq(codeFromInput("https://example.com/XYZ234/?name=A#x"), "XYZ234", "codeFromInput: link with slash, query, hash");
+  eq(codeFromInput(" 482193 "), "482193", "codeFromInput: trims");
+  eq(codeFromInput("482 193"), "482193", "codeFromInput: drops spaces");
+  eq(codeFromInput("482-193"), "482193", "codeFromInput: drops dashes");
+  eq(codeFromInput("48 21 93\n"), "482193", "codeFromInput: drops any whitespace");
+  eq(codeFromInput("４８２１９３"), "482193", "codeFromInput: full-width digits → ASCII");
+  eq(codeFromInput("http://192.168.1.5:8080/482193"), "482193", "codeFromInput: a pasted invite link");
+  eq(codeFromInput("https://example.com/012345/?name=A#x"), "012345", "codeFromInput: link with slash, query, hash");
   eq(codeFromInput(""), "", "codeFromInput: empty");
-  eq(codeFromInput("abc"), "ABC", "codeFromInput: not validated (parseRoomCode does that)");
+  eq(codeFromInput("abc"), "", "codeFromInput: letters are dropped");
+  eq(codeFromInput("4821"), "4821", "codeFromInput: not validated (parseRoomCode does that)");
+  eq(parseRoomCode(codeFromInput("482 193")), "482193", "Join box: a pasted 482 193 is valid");
+  eq(parseRoomCode(codeFromInput("48219")), null, "Join box: 5 digits is invalid");
 
   eq(routeFromPath("/"), { page: "home" }, "routeFromPath: / → home");
   eq(routeFromPath(""), { page: "home" }, "routeFromPath: empty → home");
   eq(routeFromPath("/client/index.html"), { page: "home" }, "routeFromPath: static server's index.html → home");
   eq(routeFromPath("/index.html"), { page: "home" }, "routeFromPath: /index.html → home");
-  eq(routeFromPath("/XYZ234"), { page: "room", code: "XYZ234" }, "routeFromPath: /XYZ234 → room");
-  eq(routeFromPath("/xyz234"), { page: "room", code: "XYZ234" }, "routeFromPath: lowercase code → uppercase room");
-  eq(routeFromPath("/XYZ234/"), { page: "room", code: "XYZ234" }, "routeFromPath: trailing slash");
+  eq(routeFromPath("/482193"), { page: "room", code: "482193" }, "routeFromPath: /482193 → room");
+  eq(routeFromPath("/012345"), { page: "room", code: "012345" }, "routeFromPath: leading zero kept");
+  eq(routeFromPath("/482193/"), { page: "room", code: "482193" }, "routeFromPath: trailing slash");
   eq(routeFromPath("/nope"), { page: "room", code: null, raw: "nope" }, "routeFromPath: one segment, not a code → no such game");
-  eq(routeFromPath("/XYZ230"), { page: "room", code: null, raw: "XYZ230" }, "routeFromPath: 0 is not a code character");
+  eq(routeFromPath("/XYZ234"), { page: "room", code: null, raw: "XYZ234" }, "routeFromPath: an old letter code is not a code");
+  eq(routeFromPath("/48219"), { page: "room", code: null, raw: "48219" }, "routeFromPath: 5 digits is not a code");
   eq(routeFromPath("/a%20b"), { page: "room", code: null, raw: "a b" }, "routeFromPath: decodes the segment");
   eq(routeFromPath("/%E0%A4%A"), { page: "room", code: null, raw: "%E0%A4%A" }, "routeFromPath: bad escape kept raw");
-  eq(routeFromPath("/XYZ234/ws"), { page: "home" }, "routeFromPath: deeper paths → home");
+  eq(routeFromPath("/482193/ws"), { page: "home" }, "routeFromPath: deeper paths → home");
 
-  eq(inviteLink("http://localhost:8080", "XYZ234"), "http://localhost:8080/XYZ234", "inviteLink: origin + / + code");
-  eq(routeFromPath(new URL(inviteLink("https://g.example", "ABC789")).pathname), { page: "room", code: "ABC789" },
+  eq(inviteLink("http://localhost:8080", "482193"), "http://localhost:8080/482193", "inviteLink: origin + / + code");
+  eq(routeFromPath(new URL(inviteLink("https://g.example", "012345")).pathname), { page: "room", code: "012345" },
     "inviteLink round-trips through routeFromPath");
 }
 
-// ---------- results.js: lastDealSummary (the lobby's Last deal panel) ----------
+// ---------- results.js: lastDealSummary (the lobby's Last deal card) ----------
 {
   setLang("en", { save: false });
-  eq(lastDealSummary(null, [], 0), null, "lastDealSummary(null) → null (panel hidden)");
+  eq(lastDealSummary(null, [], 0), null, "lastDealSummary(null) → null (card hidden)");
   const names = ["Josey", "Alex", "Sam", "Robin"];
+  const tile = (team, name, from, to, yours, attempts = null) =>
+    ({ team, name, from, to, changed: from !== to, yours, attempts });
   // A 1-2 by team B at level 5.
-  const d = lastDealSummary({
+  const oneTwo = {
     summary: {
       result: { order: [1, 3, 0, 2] },
       before: { team_levels: ["Two", "Five"], declaring: "B", a_attempts: [0, 0] },
@@ -1048,14 +1053,18 @@ async function checkFixturesZh() {
       { Played: { seat: 3, play: { cards: [S("Nine", "Spade"), S("Five", "Heart")], combo: { Pair: R("Nine") }, wildcard_as: ["Nine"] } } },
       { Passed: { seat: 0 } },
     ],
-  }, names, 0);
-  eq(d.headline, "Team East-West wins 1-2", "lastDealSummary 1-2 headline");
+  };
+  const d = lastDealSummary(oneTwo, names, 0);
+  eq(d.winTeam, "B", "lastDealSummary winTeam");
+  eq(d.headline, "East-West wins!", "lastDealSummary headline");
+  eq(d.finish, "1-2", "lastDealSummary finish badge");
   eq(d.places, "Alex 1st, Robin 2nd, Josey 3rd, Sam 4th", "lastDealSummary places");
-  eq(d.levels, [{ text: "Team East-West: 5 → 8", changed: true }, { text: "Team North-South (you): 2 → 2", changed: false }],
-    "lastDealSummary levels, winners first, your team marked");
-  eq(d.notes, [], "lastDealSummary: no notes for a plain deal");
-  eq(Object.keys(d).sort(), ["headline", "levels", "matchWinner", "notes", "places"],
-    "lastDealSummary: no final play (LOBBY_LOOK_SPEC §1)");
+  eq(d.levels, [tile("B", "East-West", "5", "8", false), tile("A", "North-South", "2", "2", true)],
+    "lastDealSummary tiles, winners first, your team marked");
+  // The deal-ending play: the last Played entry (the pass after it skipped),
+  // at the deal level (B's Five, so ♥5 is the wildcard).
+  eq(d.finalPlay, { cards: [S("Nine", "Spade"), S("Five", "Heart")], level: "Five", who: "Robin played:" },
+    "lastDealSummary finalPlay: last Played entry, deal level");
   eq(d.matchWinner, null, "lastDealSummary no match winner");
   // Nobody declaring (a match's first deal).
   const first = lastDealSummary({
@@ -1067,41 +1076,29 @@ async function checkFixturesZh() {
     },
     final_trick: [],
   }, names, null);
-  eq(first.headline, "Team North-South wins 1-4", "lastDealSummary first deal, 1-4");
-  eq(first.levels[0].text, "Team North-South: 2 → 4", "lastDealSummary with no seat: no (you)");
-  // The notes name teams by compass too.
-  const aceTries = lastDealSummary({
+  eq([first.headline, first.finish], ["North-South wins!", "1-4"], "lastDealSummary first deal, 1-4");
+  eq(first.levels[0], tile("A", "North-South", "2", "4", false), "lastDealSummary with no seat: not yours");
+  eq(first.finalPlay, null, "lastDealSummary: empty final_trick → no finalPlay");
+  // A failed A attempt goes in that team's tile.
+  const aceFailed = {
     summary: {
       result: { order: [1, 0, 3, 2] },
       before: { team_levels: ["Ace", "Five"], declaring: "A", a_attempts: [0, 0] },
       after: { team_levels: ["Ace", "Seven"], declaring: "B", a_attempts: [1, 0] },
       dropped_to_two: null, match_winner: null,
     },
-  }, names, 1);
-  eq(aceTries.notes, [{ text: "Team North-South: A attempt 1 of 3 failed", bad: false }], "lastDealSummary A-attempt note uses the team name");
+  };
+  const ace = lastDealSummary(aceFailed, names, 1);
+  eq(ace.levels.map((l) => l.attempts), [null, { text: "Attempts: 1/3", bad: false }], "lastDealSummary attempts in the failing team's tile");
 
-  // The same summaries in Chinese.
+  // The same in Chinese.
   setLang("zh", { save: false });
-  const dZh = lastDealSummary({
-    summary: {
-      result: { order: [1, 3, 0, 2] },
-      before: { team_levels: ["Two", "Five"], declaring: "B", a_attempts: [0, 0] },
-      after: { team_levels: ["Two", "Eight"], declaring: "B", a_attempts: [0, 0] },
-      dropped_to_two: null, match_winner: null,
-    },
-  }, names, 0);
-  eq(dZh.headline, "东西方获胜（1-2，双下）", "zh lastDealSummary 1-2 headline");
+  const dZh = lastDealSummary(oneTwo, names, 0);
+  eq(dZh.finalPlay.who, "Robin 出牌：", "zh lastDealSummary finalPlay");
+  eq([dZh.headline, dZh.finish], ["东西方获胜！", "1-2 双下"], "zh lastDealSummary headline, 双下 badge");
   eq(dZh.places, "Alex 头游，Robin 二游，Josey 三游，Sam 末游", "zh lastDealSummary places");
-  eq(dZh.levels.map((l) => l.text), ["东西方：5 → 8", "南北方（我方）：2 → 2"], "zh lastDealSummary levels");
-  const aceZh = lastDealSummary({
-    summary: {
-      result: { order: [1, 0, 3, 2] },
-      before: { team_levels: ["Ace", "Five"], declaring: "A", a_attempts: [0, 0] },
-      after: { team_levels: ["Ace", "Seven"], declaring: "B", a_attempts: [1, 0] },
-      dropped_to_two: null, match_winner: null,
-    },
-  }, names, 1);
-  eq(aceZh.notes, [{ text: "南北方：第1次打A失败（共3次）", bad: false }], "zh lastDealSummary A-attempt note");
+  eq(dZh.levels.map((l) => l.name), ["东西方", "南北方"], "zh lastDealSummary tile names");
+  eq(lastDealSummary(aceFailed, names, 1).levels[1].attempts, { text: "打A：1/3", bad: false }, "zh lastDealSummary attempts");
   setLang("en", { save: false });
 }
 
@@ -1110,32 +1107,33 @@ async function checkLastDealFixtures() {
   const load = async (name) =>
     (await fetch(new URL(`../fixtures/${name}.json`, document.baseURI), { cache: "no-store" })).json();
   const summarize = (msg) => lastDealSummary(msg.room.Lobby.last_deal, msg.seats, msg.your_seat);
+  const scores = (d) => d.levels.map((l) => `${l.name}${l.yours ? " (yours)" : ""} ${l.from}→${l.to}${l.attempts ? ` [${l.attempts.text}${l.attempts.bad ? "!" : ""}]` : ""}`);
   setLang("en", { save: false });
 
   eq(summarize(await load("state_lobby")), null, "state_lobby: no last deal");
 
   const between = summarize(await load("state_lobby_between_deals"));
-  eq(between.headline, "Team East-West wins 1-3", "state_lobby_between_deals headline");
+  eq([between.headline, between.finish], ["East-West wins!", "1-3"], "state_lobby_between_deals headline");
   eq(between.places, "Alex 1st, Sam 2nd, Robin 3rd, Josey 4th", "state_lobby_between_deals places");
-  eq(between.levels.map((l) => l.text), ["Team East-West: 6 → 8", "Team North-South (you): A → A"], "state_lobby_between_deals levels");
-  eq(between.notes, [{ text: "Team North-South: A attempt 1 of 3 failed", bad: false }], "state_lobby_between_deals A-attempt line");
+  eq(scores(between), ["East-West 6→8", "North-South (yours) A→A [Attempts: 1/3]"], "state_lobby_between_deals tiles");
   eq(between.matchWinner, null, "state_lobby_between_deals: match not won");
+  eq(between.finalPlay.who, "Robin played:", "state_lobby_between_deals: final play");
 
   const dropped = summarize(await load("state_lobby_dropped_to_two"));
-  eq(dropped.headline, "Team East-West wins 1-4", "state_lobby_dropped_to_two headline");
-  eq(dropped.notes, [{ text: "Team North-South failed at A three times — back to 2.", bad: true }],
-    "state_lobby_dropped_to_two: dropped line, no A-attempt line (Decision 24)");
-  eq(dropped.levels.map((l) => l.text), ["Team East-West: 9 → 10", "Team North-South (you): A → 2"], "state_lobby_dropped_to_two levels");
+  eq([dropped.headline, dropped.finish], ["East-West wins!", "1-4"], "state_lobby_dropped_to_two headline");
+  eq(scores(dropped), ["East-West 9→10", "North-South (yours) A→2 [Attempts: 3/3!]"],
+    "state_lobby_dropped_to_two tiles: 3/3 in red (Decision 24)");
 
   const won = summarize(await load("state_lobby_match_won"));
   eq(won.matchWinner, "A", "state_lobby_match_won: team A won the match");
-  eq(won.headline, "Team North-South wins 1-3", "state_lobby_match_won headline");
-  eq(won.notes, [], "state_lobby_match_won: no A-attempt line for the match winner");
+  eq([won.headline, won.finish], ["North-South wins!", "1-3"], "state_lobby_match_won headline");
+  eq(won.levels.map((l) => l.attempts), [null, null], "state_lobby_match_won: no attempts for the match winner");
+  ok(won.finalPlay && isClean(won.finalPlay.who), `state_lobby_match_won: final play → ${JSON.stringify(won.finalPlay?.who)}`);
 
   setLang("zh", { save: false });
-  const droppedZh = summarize(await load("state_lobby_dropped_to_two"));
-  eq(droppedZh.notes, [{ text: "南北方三次打A不过，退回2。", bad: true }], "zh state_lobby_dropped_to_two: dropped line");
-  eq(summarize(await load("state_lobby_between_deals")).headline, "东西方获胜（1-3）", "zh state_lobby_between_deals headline");
+  eq(scores(summarize(await load("state_lobby_dropped_to_two"))), ["东西方 9→10", "南北方 (yours) A→2 [打A：3/3!]"],
+    "zh state_lobby_dropped_to_two tiles");
+  eq(summarize(await load("state_lobby_between_deals")).headline, "东西方获胜！", "zh state_lobby_between_deals headline");
   setLang("en", { save: false });
 }
 

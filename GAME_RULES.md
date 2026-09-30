@@ -305,8 +305,8 @@ each other. The same applies to every combo type.
   they no longer take turns, but the deal continues among the active
   players until one team has both players out (see "Deal End").
 
-A player may **take back** their most recent play until the next player
-acts (house rule; see "Interpretations & house rules" #10).
+A player may **take back** their most recent play or pass until the next
+player acts (house rule; see "Interpretations & house rules" #10).
 
 ### Announcing cards left
 
@@ -555,14 +555,15 @@ want a different variant:
    but the cards.
    Not in the official rules; a convenience for friendly play and testing
    (see `LOBBY_FLOW_SPEC.md`).
-10. **Taking back a play.** After making a **play** (not a pass), a player
-   may take it back as long as **no other player has acted since**. Taking
-   it back restores exactly the state before the play: the cards return to
+10. **Taking back a play or a pass.** After making a **play or a pass**, a
+   player may take it back as long as **no other player has acted since**.
+   Taking it back restores exactly the state before it: the cards return to
    their hand, the trick (its best play and who has passed) is as it was,
-   and it's their turn again. If the play made them go out, that is undone
-   too. A play that **ended the deal** can't be taken back, and only the
-   most recent play can be (one step). Passes, tributes and returns can't be
-   taken back. Everyone is told when a play is taken back. Not in the
+   and it's their turn again. If a play made them go out, that is undone
+   too. A pass that **ended the trick** can't be taken back (a finished
+   trick stays finished), and neither can a play that **ended the deal**.
+   Only the most recent action can be taken back (one step). Tributes and
+   returns can't be taken back. Everyone is told when a play is taken back. Not in the
    official rules; a convenience for friendly play (see
    `GAME_PAGE_V3_SPEC.md` §1).
 
